@@ -1,0 +1,330 @@
+Questions
+- currently if you lose (lose all 5 lives), you cant drag but game gets initialize with infinite loop
+=============================================
+TODO
+- minerals should be randomly spaced but with minimum between each other
+- minerals should have a struct of value, color? (for future, different values have different colors)
+- minerals easing curves (instead of linear strength)
+- bigger planets, higher mineral generation percentage
+x win condition (win condition when reaching destination planet with no minerals to full minerals, get stars and money depending on how many minerals you get)
+x lose condition (crash, crash 5 times)
+- if you get 3 stars you get an extra item like a life or something like that. no minerals = 0 stars, max minerals collected = 3 stars
+- multiple planets setup (should be playable)
+- there should be a way to get all the minerals in one game with one launch
+- if you crash you dont reset level, you get repositioned, and lose one life, minerals collected are not there anymore
+- split physics, inputs and so on into different folders (gravity, fiction, etc. in /physics)
+- folder with different game input functions like drag, restart game (press R to restart), start game, etc.
+- move the collision check inside applyGravity() to its own func checkCollisions()
+- camera zoom out when far and not follow ship
+- if zoom reaches limit, the space ship has 3 seconds to come back (show ship in a bubble and a 5 second counter below), if not its lost in space (lose 1 life)
+- make it mobile with https://ebitengine.org/en/documents/mobile.html
+- automate randomize levels and saving them to create levels
+- add black holes that kill you when you enter with strong pull
+- black holes pulls the whole map, so everything would be moving on start (maybe except destination)
+- black hole spaghettify effect
+- add wormholes that transport you to another place
+- add a booster button to make it go faster or give it more energy (to escape strong gravity)
+x make it so you can launch it only once
+x add 5 lives to lose the game
+- minerals could have different values, the higher the value, the closer you would need to get to the planet
+- add a background circle to planets to show where the gravity pull start
+- asteroid belt/planet rings that the ship has to get through (think star wars)
+- dragging line should curve towards the gravity pull if aiming ship at a planet
+- make trail color shift: slow = green, fast = yellow → white
+- add curved “orbital paths” so planets feel more natural instead of grid-like
+- there could be stars with solar flares or planets with volcanoes (think of Mars) where they blow up after x seconds, and they shake harder and harder before flaring or erupting (to inform the player).
+- accessories 
+-- booster capacity - increase size of booster fuel to have more booster travel time (especially to escape a planets gravity pull)
+-- magnet strength - increase size of magnet radius to gather minerals from further alway
+-- force shield - to recieve no damage from x amount of impacts 
+-- lives (pay)
+-- space ship skins (free and pay)
+-- minerals (pay)
+-- coins (get through minerals or pay)
+
+=============================================
+
+GAME INFO 
+
+i want to make a 2d game for mobile game where the user drags and releases a rocket (think of angry birds drag and release) 
+and has to reach x position 
+- there are planets with different gravity forces that affect the trajectory of the rocket. 
+The rocket is a transport ship that has to bring minerals that it gathers by passing a planet 
+(lets say as if its uses a magnet to pull the mineral from the planet) and brings it to its destination. 
+if the spaceship hits the planet it crashes.
+
+Space ship 
+- starts in point A and has to reach point B with x amount of minerals which is stated in the mission briefing 
+- drag and release when the map starts 
+- you can aim and drag to add more energy (think angry birds again) 
+- it has a "magnet" that collects minerals when close to a planet 
+
+Planets 
+- have gravity force 
+- spaceship can crash into it 
+- grows a mineral (maybe each planet has x amount of minerals depending on the mission), 
+for example if the mission is to collect 3 minerals and there are 2 planets, 
+maybe 1 planet has 2 minerals and the other has 1, or one planet has all 3 
+
+Map 
+- background is black with random white dots to simulate stars 
+- has x amount of planets 
+- has a planet that is the destination, where the spaceship has to land 
+- if the spaceship goes out of mobile viewport bounds, 
+the map zooms out to allow to see the rocket, 
+but theres a limit on how far a spaceship can go out of bounds
+
+=============================================
+
+TIPS: 
+
+Input → changes state → Draw reads state
+
+-------------------------------------------
+
+Physics flow should be:
+
+Apply forces (gravity)
+Modify velocity
+Apply friction
+Move object
+
+👉 This makes motion more stable and predictable
+
+------------------------------------------
+
+Should Crashed be in Ship?
+Short answer: no, not in your current design
+
+You asked:
+g.Ship.Crashed?
+
+That would mean:
+Ship owns its state
+But in your game, crash is:
+👉 a game rule, not a ship property
+
+Entities don’t decide game rules — the Game does.
+Ship = data + movement
+Game = rules (collision, win, lose)
+
+------------------------------------------
+
+Import/Export
+
+Rule: capital letter = exported (public)
+type Ship struct {   // ✅ exported
+    X float64       // ✅ exported
+    vx float64      // ❌ private
+}
+X → accessible from other packages
+vx → only inside same package
+
+All your files use:
+package main
+
+That means:
+everything is in the same package
+you can access everything regardless of capitalization
+
+Only when you do:
+package physics
+
+Then:
+ApplyGravity() → usable outside
+applyGravity() → NOT usable
+
+same folder + package main → everything shared
+different package → capital letters matter
+
+------------------------------------------
+
+SIN/COS
+
+sin/cos = “walk around a circle using an angle”
+
+Formula for the position of the mineral in the edge of planets
+x=Cx​+rCos(θ),y=Cy​+rSin(θ): 
+Cx, Cy = planet center, 
+r = planet radius (distance from center), 
+θ = angle (where around the circle)
+
+spreads minerals evenly around the circle
+angle := float64(index) * (2 * math.Pi / float64(p.Minerals))
+
+COS
+cos(angle) = horizontal movement (left/right)
+x := p.X + p.Radius * math.Cos(angle)
+
+SIN
+sin(angle) = vertical movement (up/down)
+y := p.Y + p.Radius * math.Sin(angle)
+
+Generate minerals randomly (with spacing)
+We randomly generate points inside a circle:
+x=Cx​+rcos(θ)	​
+y=Cy​+rsin(θ)
+
+But with random radius + angle.
+
+------------------------------------------
+RETURNS (UPDATE VS DRAW)
+
+Why return nil in Update() but just return in Draw()?
+
+Update()
+func (g *Game) Update() error
+Must return an error
+nil = “no error”
+So:
+return nil
+
+Means:
+“Game is fine, keep running”
+
+Draw()
+func (g *Game) Draw(screen *ebiten.Image)
+Returns nothing
+
+So:
+return
+
+Means:
+“Stop drawing more stuff this frame”
+
+Rule
+- functions with return type → must return value
+- void functions → just return (optional)
+
+------------------------------------------
+IMAGE VS DRAWING
+
+Image vs drawing a circle (important concept)
+
+Draw
+screen.Set(x, y, color)
+sets pixel directly
+❌ no blending
+❌ slow (per pixel every frame)
+❌ no transparency
+
+Image
+screen.DrawImage(img, op)
+draws precomputed pixels
+✅ supports alpha blending
+✅ GPU accelerated
+✅ reusable
+✅ can scale/rotate/tint
+
+Mental model:
+Set() = manual pixel painting
+DrawImage() = rendering a sprite
+👉 Real games = almost always use images
+
+------------------------------------------
+
+POINTERS
+
+Example:
+func drawShip(screen *ebiten.Image, game *Game)
+
+The * means:
+pointer to Game
+NOT a copy.
+
+Without *
+func drawShip(screen *ebiten.Image, game Game)
+
+This copies the ENTIRE Game struct every function call.
+
+Your Game contains:
+planets slice
+ship
+booleans
+level
+images
+
+That’s expensive.
+
+What a pointer actually means
+game *Game
+
+means:
+“use the original Game object in memory”
+
+instead of:
+“make a duplicate copy”
+
+------------------------------------------
+
+FIND THE SQUARE AREA OF AN OBJECT'S center
+
+for i := -int(p.Radius); i < int(p.Radius); i++ {
+	for j := -int(p.Radius); j < int(p.Radius); j++ {
+    }
+}
+
+This is scanning a square area around the planet center.
+
+Suppose:
+p.Radius = 30
+
+Then:
+i goes from -30 to +29
+j goes from -30 to +29
+
+Planet's center: (0,0)
+
+Loop checks every pixel around center:
+(-30,-30) -------- (30,-30)
+     |                 |
+     |      center     |
+     |       0,0       |
+(-30,30) --------- (30,30)
+
+Outer loop moves horizontally. (for i := ...)
+Inner loop moves vertically. (for j := ...)
+
+Together, every combination of (i, j) gets checked.
+(-30,-30)
+(-30,-29)
+(-30,-28)
+...
+(0,0)
+...
+(29,29)
+
+So you're checking every pixel inside a square.
+
+CREATE A CIRCLE 
+if i*i + j*j <= radius*radius
+
+This is the circle equation:
+x2 + y2 ≤ r2
+
+Meaning:
+points inside radius are drawn
+points outside are ignored
+
+So:
+loop scans square
+equation cuts circle out of square
+
+------------------------------------------
+
+SPEED 
+
+VX = horizontal movement
+VY = vertical movement
+speed = SQRT(VX2 + VY2)
+velocity is a vector: movement in X and Y combine diagonally > length of the velocity vector
+
+------------------------------------------
+
+ROTATION 
+
+"What angle is this velocity vector pointing?"
+Velocity: VX = 1, VY = 0 - moving right - Angle = 0 radians
+Velocity: VX = 0, VY = -1 - moving up - Angle = -PI/2
+Atan2(y, x) returns the angle of a vector
+rotation=atan2(VY,VX) + PI / 2
