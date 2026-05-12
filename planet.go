@@ -8,7 +8,6 @@ type Planet struct {
 	Gravity        float64
 	Size           int
 	Minerals       []Mineral
-	Image *ebiten.Image
 	GravityOutline *ebiten.Image
 	IsDestination  bool
 }

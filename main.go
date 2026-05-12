@@ -23,11 +23,12 @@ var startX, startY int
 // runs every frame (~60 times per second)
 func (game *Game) Update() error {
 	if game.Won {
-		game.initializeNewLevel()
+		// game.initializeNewLevel()
+		game.collectStars()
 	} else if game.Lives == 0 {
+		// TODO: 
 		// show debriefing screen/pop up
-		// for now initialize new level
-		game.initializeNewLevel()
+		return nil
 	} 
 
 	// only for testing
@@ -54,8 +55,8 @@ func (game *Game) Update() error {
 		vx := dx * 0.1
 		vy := dy * 0.1
 
-		// limit ship's speed/launch energy (15 is a placeholder) if dragged too hard
-		game.Ship.VX, game.Ship.VY = clampVelocity(vx, vy, 15)
+		// limit ship's speed/launch energy (5 is a placeholder) if dragged too hard
+		game.Ship.VX, game.Ship.VY = clampVelocity(vx, vy, 5)
 		
 		// now ship can move and physics are applied
 		game.Launched = true
@@ -64,6 +65,11 @@ func (game *Game) Update() error {
 	if game.Launched {
 		game.applyGravity()
 		game.applyFriction()
+
+		// clamps all ship's speed, including if accelerated by gravity to 5
+		// it's just here to test gameplay 
+		// game.Ship.VX, game.Ship.VY = clampVelocity(game.Ship.VX, game.Ship.VY, 5)
+
 		game.collectMinerals()
 		game.checkWin()
 
@@ -83,6 +89,7 @@ func (game *Game) Update() error {
 	if game.Crashed {
 		game.restartLevel()
 		game.Crashed = false
+		game.CrashCount += 1
 		game.Lives -= 1
 	}
 
@@ -116,14 +123,15 @@ func (game *Game) Draw(screen *ebiten.Image) {
     }
 	}
 
+	// create a func for showing score
 	if game.Won {
-		ebitenutil.DebugPrint(screen, "MISSION COMPLETE")
+		ebitenutil.DebugPrint(screen, fmt.Sprintf("Minerals: %d, Lives: %d, Stars: %d", game.CollectedMinerals, game.Lives, game.Stars))
 		// return
 	} else {
 		if game.Lives == 0 {
 			ebitenutil.DebugPrint(screen, "YOU LOST")
 		} else {
-			ebitenutil.DebugPrint(screen, fmt.Sprintf("Minerals: %d, Lives: %d", game.Ship.Minerals, game.Lives))
+			ebitenutil.DebugPrint(screen, fmt.Sprintf("Minerals: %d, Lives: %d, Crash count: %d", game.CollectedMinerals, game.Lives, game.CrashCount))
 		}
 	}
 }
@@ -136,11 +144,13 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHe
 func main() {
 	game := &Game{}
 
+	game.initializeAssets()
 	game.Ship = game.generateShip()
 	game.Planets = game.generatePlanets()
+	game.InitialPlanets = deepClonePlanets(game.Planets)
 	game.Lives = 5
 
-	game.initializeAssets() 
+	game.initializeAssetOutlines() 
 
 	ebiten.SetWindowSize(dimensionWidth, dimensionHeight)
   ebiten.SetWindowTitle("Ship Express (ShipEx/ShipX)")

@@ -8,22 +8,38 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type Assets struct {
+	ShipImage    *ebiten.Image
+	PlanetImage  *ebiten.Image
+	MineralImage *ebiten.Image
+}
+
 type Level struct {
-	screenWidth int
+	screenWidth  int
 	screenHeight int
 } 
 
 type Game struct {
-	Level 	Level
-	Ship    Ship
-	Planets []Planet
-	Launched bool
-	Lives int
-	Crashed bool
-	Won 	  bool
+	Assets 						Assets
+	Level 						Level
+	Ship    					Ship
+	InitialPlanets 		[]Planet
+	Planets 					[]Planet
+	CollectedMinerals int
+	CrashCount				int
+	Lives 						int
+	Stars 						int
+	Launched 					bool
+	Crashed  					bool
+	Won 	   					bool
 }
 
+// Initializes ebiten.Image images for ship, planets, minerals, etc.
 func (game *Game) initializeAssets() {
+	game.Assets.ShipImage = loadImage("assets/ship.png")
+}
+
+func (game *Game) initializeAssetOutlines() {
 	game.Ship.MagnetRadiusOutline = createCircleImage(int(game.Ship.MagnetRadius), color.RGBA{0, 255, 255, 255})
 
 	for index, planet := range game.Planets {
@@ -37,20 +53,27 @@ func (game *Game) initializeAssets() {
 	}
 }
 
+// This should be called when: 
+// starting the next/new level,
+// restarting entire game
 func (game *Game) initializeNewLevel() {
 	game.Ship = game.generateShip()
 	game.Planets = game.generatePlanets()
 	game.Launched = false
 	game.Won = false
-	game.initializeAssets() 
+	game.initializeAssetOutlines() 
 }
 
+// This should be called when:
+// resetting ship only, 
+// restore minerals to original state, 
+// not regenerating planets,
 // restart the same level if player crashed less than 5 times
 func (game *Game) restartLevel() {
 		game.Ship = game.generateShip()
 		game.Launched = false
 		game.Won = false
-		game.initializeAssets()
+		game.initializeAssetOutlines()
 }
 
 func (game *Game) generateShip() Ship {
@@ -59,7 +82,6 @@ func (game *Game) generateShip() Ship {
 		Y: float64(dimensionHeight) - 50,
 		Rotation: 0,
 		MagnetRadius: 60,
-		Image: loadImage("assets/ship.png"),
 	}
 }
 
@@ -94,10 +116,13 @@ func (game *Game) generatePlanets() []Planet {
 		// if true, create a planet on the calculated position
 		for !validPlanet {
 			// a bit of planet x randomness with a left-path (more zig-zag)
+			// direction alternates left/right (offset)
 			direction := 1.0
 			if i % 2 == 0 {
 				direction = -1.0
 			}
+			// planet x position = center + left/right offset
+			// 20 + rand.Float64() (0 to 1) * 40 = random number between 20 and 60 px
 			x := centerX + direction * (20 + rand.Float64() * 40)
 
 			// a bit of planet x randomness (more linear than above)
@@ -218,8 +243,8 @@ func (game *Game) generateMinerals(planet Planet, count int) []Mineral {
 func (game *Game) drawShip(screen *ebiten.Image) {
 	ship := game.Ship
 
-	w := float64(ship.Image.Bounds().Dx())
-	h := float64(ship.Image.Bounds().Dy())
+	w := float64(game.Assets.ShipImage.Bounds().Dx())
+	h := float64(game.Assets.ShipImage.Bounds().Dy())
 	scale := 0.05
 
 	options := &ebiten.DrawImageOptions{}
@@ -241,7 +266,7 @@ func (game *Game) drawShip(screen *ebiten.Image) {
 	
 
 	// draw Ship
-	screen.DrawImage(ship.Image, options)
+	screen.DrawImage(game.Assets.ShipImage, options)
 
 	// draw ship gravity radius outline
 	createOutlineImage(screen, ship, ship.MagnetRadius, ship.MagnetRadiusOutline, outlineImageAlpha)
@@ -358,7 +383,7 @@ func (game *Game) collectMinerals() {
 			// collect mineral
 			if distance < 10 {
 				mineral.Collected = true
-				game.Ship.Minerals++
+				game.CollectedMinerals++
 			}
 		}
 	}
@@ -374,5 +399,27 @@ func (game *Game) checkWin() {
 
 	if distance < destinationPlanet.Radius {
 			game.Won = true
+	}
+}
+
+func (game *Game) collectStars() {
+	totalMinerals := getTotalMineralsInLevel(game.Planets)
+	allMineralsCollected := game.CollectedMinerals == totalMinerals
+	is3stars := allMineralsCollected && game.CrashCount == 0
+	is2stars := allMineralsCollected || game.CrashCount == 0
+	is1star := !allMineralsCollected && game.CrashCount != 0
+
+	if is3stars {
+		// All minerals + all lives
+		game.Stars = 3 
+	} else if is2stars {
+		// All minerals + between 0 and 5 lives OR not all minerals + 5 lives 
+		game.Stars = 2
+	} else if is1star {
+		// Not all minerals + between 0 and 5 lives 
+		game.Stars = 1
+	} else {
+		// Not all minerals + 0 lives 
+		game.Stars = 0
 	}
 }

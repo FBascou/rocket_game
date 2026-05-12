@@ -23,7 +23,8 @@ type Positionable interface {
 // Limit velocity on drag and release
 func clampVelocity(vx, vy, max float64) (float64, float64) {
 	// speed = length of velocity vector:
-	speed := math.Sqrt(vx*vx + vy*vy)
+	// pythagorean theorem: speed² = vx² + vy² => speed = √(vx² + vy²)
+	speed := math.Sqrt(vx * vx + vy * vy)
 
 	if speed > max {
 		scale := max / speed
@@ -82,4 +83,30 @@ func loadImage(path string) *ebiten.Image {
 	}
 
 	return ebiten.NewImageFromImage(img)
+}
+
+// Get the count of all minerals from all the planets in a level
+func getTotalMineralsInLevel(planets []Planet) int {
+	minerals := 0
+	for index := 0; index < len(planets); index++ {
+		minerals += len(planets[index].Minerals)
+	}
+	return minerals
+}
+
+// Deep cloning planets and minerals for level restart
+// Should be used for replaying whole level and restarting entire game 
+func deepClonePlanets(planets []Planet) []Planet {
+    cloned := make([]Planet, len(planets))
+
+    for index, planet := range planets {
+        cloned[index] = planet
+
+        clonedMinerals := make([]Mineral, len(planet.Minerals))
+        copy(clonedMinerals, planet.Minerals)
+
+        cloned[index].Minerals = clonedMinerals
+    }
+
+    return cloned
 }
