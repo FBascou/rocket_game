@@ -22,12 +22,22 @@ var startX, startY int
 
 // runs every frame (~60 times per second)
 func (game *Game) Update() error {
+	if game.LevelMenuState != LevelMenuClosed {
+		game.updateMenu()
+
+		// close menu with P
+		if inpututil.IsKeyJustPressed(ebiten.KeyP) {
+			game.LevelMenuState = LevelMenuClosed
+		}
+
+		return nil
+	}
+
 	if game.Won {
 		// game.initializeNewLevel()
-		game.collectStars()
+		game.LevelMenuState = LevelMenuWin
 	} else if game.Lives == 0 {
-		// TODO: 
-		// show debriefing screen/pop up
+		game.LevelMenuState = LevelMenuLose
 		return nil
 	} 
 
@@ -36,14 +46,18 @@ func (game *Game) Update() error {
 		game.initializeNewLevel()
 	}
 
+if inpututil.IsKeyJustPressed(ebiten.KeyP) {
+	game.LevelMenuState = LevelMenuPause
+}
+
 	// start drag while !game.Launched prevents ship or physics to work
-	if !game.Launched && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	if  !game.Launched && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		dragging = true
 		startX, startY = ebiten.CursorPosition()
 	}
 
 	// end drag (release)
-	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+	if dragging && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 		dragging = false
 
 		endX, endY := ebiten.CursorPosition()
@@ -87,10 +101,18 @@ func (game *Game) Update() error {
 	}
 
 	if game.Crashed {
-		game.restartLevel()
+		game.Lives--
+		game.CrashCount++
+
+		game.resetShipAfterCrash()
+
+		if game.Lives == 0 {
+			game.LevelMenuState = LevelMenuLose
+		} else {
+			game.LevelMenuState = LevelMenuPause
+		}
+
 		game.Crashed = false
-		game.CrashCount += 1
-		game.Lives -= 1
 	}
 
 	return nil
@@ -134,6 +156,10 @@ func (game *Game) Draw(screen *ebiten.Image) {
 			ebitenutil.DebugPrint(screen, fmt.Sprintf("Minerals: %d, Lives: %d, Crash count: %d", game.CollectedMinerals, game.Lives, game.CrashCount))
 		}
 	}
+
+	if game.LevelMenuState != LevelMenuClosed {
+		game.drawLevelMenu(screen)
+	}
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -149,9 +175,10 @@ func main() {
 	game.Planets = game.generatePlanets()
 	game.InitialPlanets = deepClonePlanets(game.Planets)
 	game.Lives = 5
-
+	
 	game.initializeAssetOutlines() 
-
+	
+	// game.Menu = game.generateLevelMenu()
 	ebiten.SetWindowSize(dimensionWidth, dimensionHeight)
   ebiten.SetWindowTitle("Ship Express (ShipEx/ShipX)")
 

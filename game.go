@@ -1,11 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type Assets struct {
@@ -22,9 +26,11 @@ type Level struct {
 type Game struct {
 	Assets 						Assets
 	Level 						Level
+	LevelMenuState		LevelMenuState
 	Ship    					Ship
 	InitialPlanets 		[]Planet
 	Planets 					[]Planet
+	LevelNumber 			int
 	CollectedMinerals int
 	CrashCount				int
 	Lives 						int
@@ -59,8 +65,11 @@ func (game *Game) initializeAssetOutlines() {
 func (game *Game) initializeNewLevel() {
 	game.Ship = game.generateShip()
 	game.Planets = game.generatePlanets()
+	game.InitialPlanets = deepClonePlanets(game.Planets)
+
 	game.Launched = false
 	game.Won = false
+	
 	game.initializeAssetOutlines() 
 }
 
@@ -69,11 +78,21 @@ func (game *Game) initializeNewLevel() {
 // restore minerals to original state, 
 // not regenerating planets,
 // restart the same level if player crashed less than 5 times
-func (game *Game) restartLevel() {
-		game.Ship = game.generateShip()
-		game.Launched = false
-		game.Won = false
-		game.initializeAssetOutlines()
+func (game *Game) resetLevel() {
+	game.Ship = game.generateShip()
+	game.Planets = deepClonePlanets(game.InitialPlanets)
+	game.CollectedMinerals = 0
+	game.CrashCount = 0
+	game.Launched = false
+	game.Won = false
+	game.initializeAssetOutlines() 
+}
+
+func (game *Game) resetShipAfterCrash() {
+	game.Ship = game.generateShip()
+	game.Launched = false
+	game.Won = false
+	game.initializeAssetOutlines()
 }
 
 func (game *Game) generateShip() Ship {
@@ -238,6 +257,70 @@ func (game *Game) generateMinerals(planet Planet, count int) []Mineral {
 	return minerals
 }
 
+func (game *Game) drawLevelMenu(screen *ebiten.Image) {
+	// dark transparent overlay
+	vector.FillRect(
+		screen,
+		0,
+		0,
+		float32(dimensionWidth),
+		float32(dimensionHeight),
+		color.RGBA{0, 0, 0, 180},
+		false,
+	)
+
+
+	// menu panel
+	panelX := 50.0
+	panelY := 150.0
+	panelW := 300.0
+	panelH := 300.0
+
+	vector.FillRect(
+		screen,
+		float32(panelX),
+		float32(panelY),
+		float32(panelW),
+		float32(panelH),
+		color.RGBA{80, 80, 80, 255},
+		false, // anti-aliasing
+	)
+
+	// title
+	title := "PAUSED"
+
+	if game.LevelMenuState == LevelMenuWin {
+		title = "LEVEL COMPLETE"
+	}
+
+	if game.LevelMenuState == LevelMenuLose {
+		title = "YOU LOST"
+	}
+
+	ebitenutil.DebugPrintAt(screen, title, 120, 180)
+
+	// stats
+	ebitenutil.DebugPrintAt(
+		screen,
+		fmt.Sprintf("Stars: %d", game.Stars),
+		120,
+		220,
+	)
+
+	ebitenutil.DebugPrintAt(
+		screen,
+		fmt.Sprintf("Level: %d", game.LevelNumber),
+		120,
+		250,
+	)
+
+	// fake buttons for now
+	game.drawButton(screen, 100, 320, 200, 40, "SETTINGS")
+	game.drawButton(screen, 100, 380, 200, 40, "REPLAY")
+	game.drawButton(screen, 100, 440, 200, 40, "NEXT")
+	// game.drawButton(screen, 100, 440, 200, 40, "X")
+}
+
 // Draw the ship image and its magnet outline
 // GeoM order matters: Translate(center of body) > Scale > Rotate > Translate(world position)
 func (game *Game) drawShip(screen *ebiten.Image) {
@@ -296,7 +379,6 @@ func drawPlanet(screen *ebiten.Image, planet Planet) {
 
 func (game *Game) drawPlanets(screen *ebiten.Image) {
 	for _, planet := range game.Planets {
-		// isDestinationPlanet := index == game.getDestinationPlanetIndex()
 		drawPlanet(screen, planet)
 	}
 }
@@ -398,7 +480,9 @@ func (game *Game) checkWin() {
 	distance := math.Sqrt(dx*dx + dy*dy)
 
 	if distance < destinationPlanet.Radius {
-			game.Won = true
+		game.Won = true
+		game.collectStars()
+		game.LevelMenuState = LevelMenuWin
 	}
 }
 
@@ -421,5 +505,25 @@ func (game *Game) collectStars() {
 	} else {
 		// Not all minerals + 0 lives 
 		game.Stars = 0
+	}
+}
+
+func (game *Game) updateMenu() {
+	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		return
+	}
+
+	mx, my := ebiten.CursorPosition()
+
+	// replay button
+	if isPointInsideRect(mx, my, 100, 380, 200, 40) {
+		game.resetLevel()
+		game.LevelMenuState = LevelMenuClosed
+	}
+
+	// next level button
+	if isPointInsideRect(mx, my, 100, 440, 200, 40) {
+		game.initializeNewLevel()
+		game.LevelMenuState = LevelMenuClosed
 	}
 }
