@@ -1,15 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"image/color"
 	"math"
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type Assets struct {
@@ -56,20 +52,6 @@ func (game *Game) initializeAssets() {
 	game.Assets.ShipImage = loadImage("assets/ship.png")
 }
 
-func (game *Game) initializeAssetOutlines() {
-	game.Ship.MagnetRadiusOutline = createCircleImage(int(game.Ship.MagnetRadius), color.RGBA{0, 255, 255, 255})
-
-	for index, planet := range game.Planets {
-    if planet.IsDestination {
-			game.Planets[index].GravityOutline =
-				createCircleImage(int(game.Planets[index].Gravity), color.RGBA{0, 0, 255, 255})
-    } else {
-			game.Planets[index].GravityOutline =
-				createCircleImage(int(game.Planets[index].Gravity), color.RGBA{255, 0, 0, 255})
-    }
-	}
-}
-
 // This should be called when: 
 // starting the next/new level,
 // restarting entire game
@@ -78,11 +60,6 @@ func (game *Game) initializeNewLevel() {
 	game.Ship = game.generateShip()
 	game.Planets = game.generatePlanets()
 	game.InitialPlanets = deepClonePlanets(game.Planets)
-
-	// game.Launched = false
-	// game.Won = false
-	
-	game.initializeAssetOutlines() 
 }
 
 // This should be called when:
@@ -96,17 +73,11 @@ func (game *Game) resetLevel() {
 	game.Planets = deepClonePlanets(game.InitialPlanets)
 	game.CollectedMinerals = 0
 	game.CrashCount = 0
-	// game.Launched = false
-	// game.Won = false
-	game.initializeAssetOutlines() 
 }
 
 func (game *Game) resetShipAfterCrash() {
 	game.GameState = StateAiming
 	game.Ship = game.generateShip()
-	// game.Launched = false
-	// game.Won = false
-	game.initializeAssetOutlines()
 }
 
 func (game *Game) generateShip() Ship {
@@ -273,154 +244,6 @@ func (game *Game) generateMinerals(planet Planet, count int) []Mineral {
 	return minerals
 }
 
-func (game *Game) drawLevelMenu(screen *ebiten.Image) {
-	// dark transparent overlay
-	vector.FillRect(
-		screen,
-		0,
-		0,
-		float32(dimensionWidth),
-		float32(dimensionHeight),
-		color.RGBA{0, 0, 0, 180},
-		false,
-	)
-
-
-	// menu panel
-	panelX := 50.0
-	panelY := 150.0
-	panelW := 300.0
-	panelH := 300.0
-
-	vector.FillRect(
-		screen,
-		float32(panelX),
-		float32(panelY),
-		float32(panelW),
-		float32(panelH),
-		color.RGBA{80, 80, 80, 255},
-		false, // anti-aliasing
-	)
-
-	// title of menu 
-	// missing title for crashed
-	title := "PAUSED"
-
-	if game.LevelMenuState == LevelMenuWin {
-		title = "LEVEL COMPLETE"
-	}
-
-	if game.LevelMenuState == LevelMenuLose {
-		title = "YOU LOST"
-	}
-
-	ebitenutil.DebugPrintAt(screen, title, 120, 180)
-
-	// stats
-	ebitenutil.DebugPrintAt(
-		screen,
-		fmt.Sprintf("Stars: %d", game.Stars),
-		120,
-		220,
-	)
-
-	ebitenutil.DebugPrintAt(
-		screen,
-		fmt.Sprintf("Level: %d", game.LevelNumber),
-		120,
-		250,
-	)
-
-	// fake buttons for now
-	game.drawButton(screen, 100, 320, 200, 40, "SETTINGS")
-	game.drawButton(screen, 100, 380, 200, 40, "REPLAY")
-	game.drawButton(screen, 100, 440, 200, 40, "NEXT")
-	// game.drawButton(screen, 100, 440, 200, 40, "X")
-}
-
-// Draw the ship image and its magnet outline
-// GeoM order matters: Translate(center of body) > Scale > Rotate > Translate(world position)
-func (game *Game) drawShip(screen *ebiten.Image) {
-	ship := game.Ship
-
-	w := float64(game.Assets.ShipImage.Bounds().Dx())
-	h := float64(game.Assets.ShipImage.Bounds().Dy())
-	scale := 0.05
-
-	options := &ebiten.DrawImageOptions{}
-
-	// by default in ebiten, images draw from top-left corner
-	// this moves image origin to the center of the image
-	// it rotates around the center of the image (image origin) and not top-left corner
-	// so it rotates in place instead of swinging in giant circles 
-	options.GeoM.Translate(-w / 2, -h / 2)
-
-	// temporary fix for ship size issue
-	options.GeoM.Scale(scale, scale)
-
-	// rotate ship
-	options.GeoM.Rotate(ship.Rotation)
-
-	// move ship into world position
-	options.GeoM.Translate(ship.X, ship.Y)
-	
-
-	// draw Ship
-	screen.DrawImage(game.Assets.ShipImage, options)
-
-	// draw ship gravity radius outline
-	createOutlineImage(screen, ship, ship.MagnetRadius, ship.MagnetRadiusOutline, outlineImageAlpha)
-}
-
-// Draw the planet image and its gravity outline
-func drawPlanet(screen *ebiten.Image, planet Planet) {
-	// draw Planet
-		for i := -int(planet.Radius); i < int(planet.Radius); i++ {
-			for j := -int(planet.Radius); j < int(planet.Radius); j++ {
-				// equation of a circle (x2+y2≤r2)
-				if i * i + j * j <= int(planet.Radius * planet.Radius) {
-
-					if planet.IsDestination {
-						screen.Set(int(planet.X) + i, int(planet.Y) + j, color.RGBA{0, 0, 255, 255})
-					} else {
-						screen.Set(int(planet.X) + i, int(planet.Y) + j, color.RGBA{255, 0, 0, 255})
-					}
-
-				}
-			}
-		}
-		
-		// draw planet gravity radius outline
-		createOutlineImage(screen, planet, planet.Gravity, planet.GravityOutline, outlineImageAlpha)
-}
-
-func (game *Game) drawPlanets(screen *ebiten.Image) {
-	for _, planet := range game.Planets {
-		drawPlanet(screen, planet)
-	}
-}
-
-// Draw the minerals image
-func (game *Game) drawMinerals(screen *ebiten.Image) {
-
-	for _, p := range game.Planets {
-		for _, m := range p.Minerals {
-			if m.Collected {
-				continue
-			}
-
-			for dx := -2; dx <= 2; dx++ {
-				for dy := -2; dy <= 2; dy++ {
-					speed := math.Sqrt(m.VX * m.VX + m.VY * m.VY)
-					brightness := uint8(math.Min(255, speed * 50))
-					col := color.RGBA{brightness, 255, brightness, 255}
-					screen.Set(int(m.X) + dx, int(m.Y) + dy, col)
-				}
-			}
-		}
-	}
-}
-
 func (game *Game) collectMinerals() {
 	for pi := range game.Planets {
 		planet := &game.Planets[pi]
@@ -529,6 +352,9 @@ func (game *Game) updateMenu() {
 		return
 	}
 
+	// TODO: if LevelMenuLost should be a restart button and hide replay button
+
+
 	mx, my := ebiten.CursorPosition()
 
 	// replay button
@@ -537,9 +363,13 @@ func (game *Game) updateMenu() {
 		game.LevelMenuState = LevelMenuClosed
 	}
 
-	// next level button
+	// next level button or continue button (keep playing)
 	if isPointInsideRect(mx, my, 100, 440, 200, 40) {
-		game.initializeNewLevel()
-		game.LevelMenuState = LevelMenuClosed
+		if game.LevelMenuState == LevelMenuWin {
+			game.initializeNewLevel()
+			game.LevelMenuState = LevelMenuClosed
+		} else { 
+			game.LevelMenuState = LevelMenuClosed
+		}
 	}
 }

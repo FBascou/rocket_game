@@ -15,7 +15,7 @@ import (
 
 const dimensionWidth int = 400
 const dimensionHeight int = 600
-const outlineImageAlpha float32 = 0.1
+const outlineVectorAlpha float32 = 0.04
 
 // runs every frame (~60 times per second)
 func (game *Game) Update() error {
@@ -114,8 +114,6 @@ func main() {
 	game.Planets = game.generatePlanets()
 	game.InitialPlanets = deepClonePlanets(game.Planets)
 	game.Lives = 5
-	
-	game.initializeAssetOutlines() 
 	
 	// game.Menu = game.generateLevelMenu()
 	ebiten.SetWindowSize(dimensionWidth, dimensionHeight)

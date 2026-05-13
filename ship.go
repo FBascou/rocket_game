@@ -1,13 +1,10 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
-
 type Ship struct {
-	X, Y          float64
-	VX, VY        float64
-	Rotation      float64
-	MagnetRadius  float64
-	MagnetRadiusOutline *ebiten.Image
+	X, Y         float64
+	VX, VY       float64
+	Rotation     float64
+	MagnetRadius float64
 }
 
 // Getter function

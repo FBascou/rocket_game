@@ -1,15 +1,12 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
-
 type Planet struct {
-	X, Y           float64
-	Radius         float64
-	Gravity        float64
-	Size           int
-	Minerals       []Mineral
-	GravityOutline *ebiten.Image
-	IsDestination  bool
+	X, Y          float64
+	Radius        float64
+	Gravity       float64
+	Size          int
+	Minerals      []Mineral
+	IsDestination bool
 }
 
 // Getter function
