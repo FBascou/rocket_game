@@ -23,10 +23,21 @@ type Level struct {
 	screenHeight int
 } 
 
+type GameState int
+
+const (
+	StateAiming GameState = iota
+	StateFlying
+	StateCrashed
+	StateWon
+	StateLost
+)
+
 type Game struct {
 	Assets 						Assets
 	Level 						Level
 	LevelMenuState		LevelMenuState
+	GameState					GameState
 	Ship    					Ship
 	InitialPlanets 		[]Planet
 	Planets 					[]Planet
@@ -35,9 +46,9 @@ type Game struct {
 	CrashCount				int
 	Lives 						int
 	Stars 						int
-	Launched 					bool
-	Crashed  					bool
-	Won 	   					bool
+	Dragging bool
+	DragStartX int
+	DragStartY int
 }
 
 // Initializes ebiten.Image images for ship, planets, minerals, etc.
@@ -63,12 +74,13 @@ func (game *Game) initializeAssetOutlines() {
 // starting the next/new level,
 // restarting entire game
 func (game *Game) initializeNewLevel() {
+	game.GameState = StateAiming
 	game.Ship = game.generateShip()
 	game.Planets = game.generatePlanets()
 	game.InitialPlanets = deepClonePlanets(game.Planets)
 
-	game.Launched = false
-	game.Won = false
+	// game.Launched = false
+	// game.Won = false
 	
 	game.initializeAssetOutlines() 
 }
@@ -79,19 +91,21 @@ func (game *Game) initializeNewLevel() {
 // not regenerating planets,
 // restart the same level if player crashed less than 5 times
 func (game *Game) resetLevel() {
+	game.GameState = StateAiming
 	game.Ship = game.generateShip()
 	game.Planets = deepClonePlanets(game.InitialPlanets)
 	game.CollectedMinerals = 0
 	game.CrashCount = 0
-	game.Launched = false
-	game.Won = false
+	// game.Launched = false
+	// game.Won = false
 	game.initializeAssetOutlines() 
 }
 
 func (game *Game) resetShipAfterCrash() {
+	game.GameState = StateAiming
 	game.Ship = game.generateShip()
-	game.Launched = false
-	game.Won = false
+	// game.Launched = false
+	// game.Won = false
 	game.initializeAssetOutlines()
 }
 
@@ -100,7 +114,7 @@ func (game *Game) generateShip() Ship {
 		X: float64(dimensionWidth) / 2,
 		Y: float64(dimensionHeight) - 50,
 		Rotation: 0,
-		MagnetRadius: 60,
+		MagnetRadius: 75,
 	}
 }
 
@@ -231,10 +245,12 @@ func (game *Game) generateMinerals(planet Planet, count int) []Mineral {
 
 	for len(minerals) < count {
 		angle := rand.Float64() * 2 * math.Pi
-		radius := rand.Float64() * planet.Radius
+		// uniform distribution of minerals across the circle
+		// minerals distribute evenly over the whole planet area
+		radius := math.Sqrt(rand.Float64()) * planet.Radius
 
-		x := planet.X + radius*math.Cos(angle)
-		y := planet.Y + radius*math.Sin(angle)
+		x := planet.X + radius * math.Cos(angle)
+		y := planet.Y + radius * math.Sin(angle)
 
 		valid := true
 
@@ -286,7 +302,8 @@ func (game *Game) drawLevelMenu(screen *ebiten.Image) {
 		false, // anti-aliasing
 	)
 
-	// title
+	// title of menu 
+	// missing title for crashed
 	title := "PAUSED"
 
 	if game.LevelMenuState == LevelMenuWin {
@@ -480,9 +497,8 @@ func (game *Game) checkWin() {
 	distance := math.Sqrt(dx*dx + dy*dy)
 
 	if distance < destinationPlanet.Radius {
-		game.Won = true
-		game.collectStars()
-		game.LevelMenuState = LevelMenuWin
+		game.GameState = StateWon
+		// game.collectStars() //this should already be in game.updateWon()
 	}
 }
 

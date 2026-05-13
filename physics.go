@@ -14,7 +14,7 @@ func (game *Game) applyGravity() {
 		// collision check
 		if distance < planet.Radius {
 			if !planet.IsDestination {
-				game.Crashed = true
+				game.GameState = StateCrashed
 			}
 		}
 
