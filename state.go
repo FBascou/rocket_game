@@ -69,12 +69,11 @@ func (game *Game) updateCrashed() {
 		game.LevelMenuState = LevelMenuLose
 	} else {
 		game.GameState = StateAiming
-		game.LevelMenuState = LevelMenuPause
+		game.LevelMenuState = LevelMenuCrash
 	}
 }
 
 func (game *Game) updateWon() {
-	game.collectStars()
 	game.LevelMenuState = LevelMenuWin
 }
 

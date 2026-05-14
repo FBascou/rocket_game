@@ -73,6 +73,7 @@ func (game *Game) resetLevel() {
 	game.Planets = deepClonePlanets(game.InitialPlanets)
 	game.CollectedMinerals = 0
 	game.CrashCount = 0
+	game.Lives = 5
 }
 
 func (game *Game) resetShipAfterCrash() {
@@ -321,29 +322,25 @@ func (game *Game) checkWin() {
 
 	if distance < destinationPlanet.Radius {
 		game.GameState = StateWon
-		// game.collectStars() //this should already be in game.updateWon()
+		game.collectStars() 
 	}
 }
 
 func (game *Game) collectStars() {
 	totalMinerals := getTotalMineralsInLevel(game.Planets)
 	allMineralsCollected := game.CollectedMinerals == totalMinerals
-	is3stars := allMineralsCollected && game.CrashCount == 0
-	is2stars := allMineralsCollected || game.CrashCount == 0
-	is1star := !allMineralsCollected && game.CrashCount != 0
+	is3stars := allMineralsCollected
+	is2stars := game.CrashCount == 0
+	is1star := game.CollectedMinerals == 0 && game.CrashCount != 0
 
 	if is3stars {
-		// All minerals + all lives
-		game.Stars = 3 
+		game.Stars = 3 // All minerals + all lives
 	} else if is2stars {
-		// All minerals + between 0 and 5 lives OR not all minerals + 5 lives 
-		game.Stars = 2
+		game.Stars = 2 // Not all minerals + all lives
 	} else if is1star {
-		// Not all minerals + between 0 and 5 lives 
-		game.Stars = 1
+		game.Stars = 1 // No minerals + not all lives
 	} else {
-		// Not all minerals + 0 lives 
-		game.Stars = 0
+		game.Stars = 0 // No minerals + 0 lives 
 	}
 }
 
@@ -352,24 +349,32 @@ func (game *Game) updateMenu() {
 		return
 	}
 
-	// TODO: if LevelMenuLost should be a restart button and hide replay button
-
-
 	mx, my := ebiten.CursorPosition()
 
 	// replay button
 	if isPointInsideRect(mx, my, 100, 380, 200, 40) {
 		game.resetLevel()
+
+		// restore lives 
+		game.Lives = 5
+
 		game.LevelMenuState = LevelMenuClosed
 	}
 
 	// next level button or continue button (keep playing)
 	if isPointInsideRect(mx, my, 100, 440, 200, 40) {
+		// go next level
 		if game.LevelMenuState == LevelMenuWin {
 			game.initializeNewLevel()
 			game.LevelMenuState = LevelMenuClosed
-		} else { 
+			return
+		}
+
+		// keep playing after crash/pause
+		if game.LevelMenuState == LevelMenuCrash ||
+			game.LevelMenuState == LevelMenuPause {
 			game.LevelMenuState = LevelMenuClosed
+			return
 		}
 	}
 }

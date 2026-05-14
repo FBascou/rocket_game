@@ -27,23 +27,13 @@ func drawFilledCircle(
 	screen *ebiten.Image,
 	x, y, radius float64,
 	clr color.Color,
-	alpha float32,
 ) {
-	r, g, b, _ := clr.RGBA()
-
-	fillColor := color.RGBA{
-		R: uint8(r >> 8),
-		G: uint8(g >> 8),
-		B: uint8(b >> 8),
-		A: uint8(alpha * 255),
-	}
-
 	vector.FillCircle(
 		screen,
 		float32(x),
 		float32(y),
 		float32(radius),
-		fillColor,
+		clr,
 		false,
 	)
 }
@@ -77,7 +67,6 @@ func (game *Game) drawShip(screen *ebiten.Image) {
 		game.Ship.Y,
 		game.Ship.MagnetRadius,
 		color.RGBA{0, 30, 30, 30},
-		outlineVectorAlpha,
 	)
 
 	drawShipVector(screen, game.Ship)
@@ -92,7 +81,6 @@ func drawPlanetVector(screen *ebiten.Image, planet Planet) {
 			planet.Y,
 			planet.Gravity,
 			color.RGBA{0, 0, 30, 30},
-			outlineVectorAlpha,
 		)
 
 		vector.FillCircle(
@@ -110,7 +98,6 @@ func drawPlanetVector(screen *ebiten.Image, planet Planet) {
 			planet.Y,
 			planet.Gravity,
 			color.RGBA{30, 0, 0, 30},
-			outlineVectorAlpha,
 		)
 
 		vector.FillCircle(
@@ -160,16 +147,19 @@ func (game *Game) drawLevelMenu(screen *ebiten.Image) {
 	)
 
 	// title of menu 
-	// missing title for crashed
 	title := "PAUSED"
 
-	if game.LevelMenuState == LevelMenuWin {
-		title = "LEVEL COMPLETE"
-	}
+	if game.LevelMenuState == LevelMenuCrash {
+	title = "SHIP DESTROYED"
+}
 
-	if game.LevelMenuState == LevelMenuLose {
-		title = "YOU LOST"
-	}
+if game.LevelMenuState == LevelMenuWin {
+	title = "LEVEL COMPLETE"
+}
+
+if game.LevelMenuState == LevelMenuLose {
+	title = "YOU LOST"
+}
 
 	ebitenutil.DebugPrintAt(screen, title, 120, 180)
 
@@ -191,11 +181,17 @@ func (game *Game) drawLevelMenu(screen *ebiten.Image) {
 	// fake buttons for now
 	game.drawButton(screen, 100, 320, 200, 40, "SETTINGS")
 	game.drawButton(screen, 100, 380, 200, 40, "REPLAY")
-	// TODO: if LevelMenuLost should be a restart button and hide replay button
-	if game.LevelMenuState == LevelMenuWin {
-		game.drawButton(screen, 100, 440, 200, 40, "NEXT LEVEL")
-	} else {
-		game.drawButton(screen, 100, 440, 200, 40, "KEEP PLAYING")
+	
+	switch game.LevelMenuState {
+		case LevelMenuWin:
+			// if win
+			game.drawButton(screen, 100, 440, 200, 40, "NEXT LEVEL")
+		case LevelMenuCrash:
+			// if crash
+			game.drawButton(screen, 100, 440, 200, 40, "KEEP PLAYING")
+		default:
+			// if pause
+			game.drawButton(screen, 100, 440, 200, 40, "RESUME")
 	}
 	// game.drawButton(screen, 100, 440, 200, 40, "X")
 }

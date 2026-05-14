@@ -15,7 +15,7 @@ import (
 
 const dimensionWidth int = 400
 const dimensionHeight int = 600
-const outlineVectorAlpha float32 = 0.04
+// const outlineVectorAlpha float32 = 0.04
 
 // runs every frame (~60 times per second)
 func (game *Game) Update() error {
