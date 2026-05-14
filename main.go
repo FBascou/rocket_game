@@ -67,27 +67,12 @@ func (game *Game) Draw(screen *ebiten.Image) {
 
 	// draw the line when dragging
 	if game.Dragging {
-    cx, cy := ebiten.CursorPosition()
-
-    // simple line (step-based) when dragging the ship
-    steps := 20
-    for i := 0; i < steps; i++ {
-			t := float64(i) / float64(steps)
-
-			// linear interpolation (lerp):
-			// L=A(1−t)+Bt: A = start, B = end, t = how far between them (0 → 1)
-			x := float64(game.DragStartX) * (1 - t) + float64(cx) * t
-			y := float64(game.DragStartY) * (1 - t) + float64(cy) * t
-
-			// sets white dots on the line
-			screen.Set(int(x), int(y), color.White)
-    }
+		game.drawDragIndicator(screen)
 	}
 
-	// create a func for showing score
+	// create a func for showing score below
 	if game.GameState == StateWon {
 		ebitenutil.DebugPrint(screen, fmt.Sprintf("Minerals: %d, Lives: %d, Stars: %d", game.CollectedMinerals, game.Lives, game.Stars))
-		// return
 	} else {
 		if game.GameState == StateLost {
 			ebitenutil.DebugPrint(screen, "YOU LOST")
@@ -108,6 +93,19 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHe
 // Function that initializes the game and its assets
 func main() {
 	game := &Game{}
+	game.GameConfig = GameConfig{
+    DragLineSteps:        15,
+		DragPreviewStep: 			2.0,
+    LaunchPower:          0.1,
+    MaxLaunchSpeed:       6,
+    ShipFriction:         0.99,
+    MaxShipSpeed:         7,
+    MagnetRadius:         75,
+    MagnetPull:           0.3,
+    MagnetFollowStrength: 0.2,
+    MineralDamping:       0.95,
+    GravityFalloff:       50,
+	}
 	game.GameState = StateAiming
 	game.initializeAssets()
 	game.Ship = game.generateShip()

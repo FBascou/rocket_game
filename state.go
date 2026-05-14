@@ -24,11 +24,11 @@ func (game *Game) updateAiming() {
 		dx := float64(game.DragStartX - endX)
 		dy := float64(game.DragStartY - endY)
 
-		vx := dx * 0.1
-		vy := dy * 0.1
+		vx := dx * game.GameConfig.LaunchPower
+		vy := dy * game.GameConfig.LaunchPower
 
-		// limit ship's speed/launch energy (7 is a placeholder) if dragged too hard
-		game.Ship.VX, game.Ship.VY = clampVelocity(vx, vy, 7)
+		// limit ship's initial speed/launch energy (6 is a placeholder) if dragged too hard
+		game.Ship.VX, game.Ship.VY = clampVelocity(vx, vy, game.GameConfig.MaxLaunchSpeed)
 
 		// now ship can move and physics are applied
 		game.GameState = StateFlying
@@ -38,10 +38,11 @@ func (game *Game) updateAiming() {
 func (game *Game) updateFlying() {
 	game.applyGravity()
 	game.applyFriction()
+	game.applySpeedDamping()
 
-	// clamps all ship's speed, including if accelerated by gravity to 5
+	// clamps all ship's speed, including if accelerated by gravity to 6
 	// it's just here to test gameplay 
-	// game.Ship.VX, game.Ship.VY = clampVelocity(game.Ship.VX, game.Ship.VY, 5)
+	// game.Ship.VX, game.Ship.VY = clampVelocity(game.Ship.VX, game.Ship.VY, 6)
 
 	game.collectMinerals()
 	game.checkWin()
@@ -73,10 +74,18 @@ func (game *Game) updateCrashed() {
 	}
 }
 
+// per-frame behavior while in won state
 func (game *Game) updateWon() {
 	game.LevelMenuState = LevelMenuWin
 }
 
 func (game *Game) updateLost() {
 	game.LevelMenuState = LevelMenuLose
+}
+
+// one-time transition
+func (game *Game) getWinResult() {
+	game.GameState = StateWon
+	game.collectStars()
+	game.LevelMenuState = LevelMenuWin
 }

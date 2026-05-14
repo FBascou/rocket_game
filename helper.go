@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 	"log"
-	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -20,21 +19,6 @@ type RadomXY struct {
 type Positionable interface {
 	GetX() float64
 	GetY() float64
-}
-
-// Limit velocity on drag and release
-func clampVelocity(vx, vy, max float64) (float64, float64) {
-	// speed = length of velocity vector:
-	// pythagorean theorem: speed² = vx² + vy² => speed = √(vx² + vy²)
-	speed := math.Sqrt(vx * vx + vy * vy)
-
-	if speed > max {
-		scale := max / speed
-		vx *= scale
-		vy *= scale
-	}
-
-	return vx, vy
 }
 
 // Returns the destination planet (last in the slice)

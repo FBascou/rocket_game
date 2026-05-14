@@ -216,3 +216,90 @@ func (game *Game) drawMinerals(screen *ebiten.Image) {
 		}
 	}
 }
+
+func (game *Game) drawDragIndicator(screen *ebiten.Image) {
+	cursorX, cursorY := ebiten.CursorPosition()
+
+	// launch vector
+	dx := float64(game.DragStartX - cursorX)
+	dy := float64(game.DragStartY - cursorY)
+
+	vx := dx * game.GameConfig.LaunchPower
+	vy := dy * game.GameConfig.LaunchPower
+
+	// use same clamp as actual launch
+	vx, vy = clampVelocity(
+		vx,
+		vy,
+		game.GameConfig.MaxLaunchSpeed,
+	)
+
+	// predicted x/y position (simulates a fake future path)
+	px := game.Ship.X
+	py := game.Ship.Y
+
+	steps := game.GameConfig.DragLineSteps
+
+  // simple dotted line (step-based) when dragging the ship
+	for i := 0; i < steps; i++ {
+		// fake gravity preview
+		for _, planet := range game.Planets {
+
+			dx := planet.X - px
+			dy := planet.Y - py
+
+			distance := math.Sqrt(dx * dx + dy * dy)
+
+			if distance < 1 {
+				continue
+			}
+
+			// allows the line to bends immediately at the planet's gravity pull edge
+			gravityRadius := planet.Gravity
+
+			strength := 1.0 - (distance / gravityRadius)
+
+			if strength < 0 {
+					strength = 0
+			}
+
+			force := strength * 0.12
+
+			vx += (dx / distance) * force
+			vy += (dy / distance) * force
+		}
+
+		// add friction
+		vx *= game.GameConfig.ShipFriction
+    vy *= game.GameConfig.ShipFriction
+
+		// preview step multiplier to make dots more spaced
+		previewStep := game.GameConfig.DragPreviewStep
+
+		// move prediction point (how/where each dot moves)
+		// slow velocity = tightly packed dots
+		// fast velocity = spaced dots
+		// dots are still fairly dense because you're only advancing by 1 frame of movement per loop
+		px += vx * previewStep
+		py += vy * previewStep
+
+		// t = 0 means the first dot, whilst t = 1 is the last dot
+		// thickness grows toward drag end
+		t := float64(i) / float64(steps)
+
+		// radius of drag line dots
+		// 2 means radius near ship (minimum dot radius), 1 means extra growth amount
+		radius := 2 - t * 1
+
+		// transparency - first dots have less opacity, last dots have more opacity
+		alpha := uint8(120 + t * 135)
+
+		drawFilledCircle(
+			screen,
+			px,
+			py,
+			radius,
+			color.RGBA{255, 255, 255, alpha},
+		)
+	}
+}

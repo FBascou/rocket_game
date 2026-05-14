@@ -14,6 +14,30 @@ type Assets struct {
 	MineralImage *ebiten.Image
 }
 
+type GameConfig struct {
+	// Drag line dot amount
+	DragLineSteps        int
+	// Drag line dot space multiplier
+	DragPreviewStep float64
+
+	// Ship's initial launch speed
+	LaunchPower          float64
+	MaxLaunchSpeed       float64
+
+	// Ship's speed
+	ShipFriction         float64
+	MaxShipSpeed         float64
+	
+	// Ship's magnet strength
+	MagnetRadius         float64
+	MagnetPull           float64
+	MagnetFollowStrength float64
+	MineralDamping       float64
+	
+	// Planet gravity
+	GravityFalloff       float64
+}
+
 type Level struct {
 	screenWidth  int
 	screenHeight int
@@ -34,6 +58,7 @@ type Game struct {
 	Level 						Level
 	LevelMenuState		LevelMenuState
 	GameState					GameState
+	GameConfig				GameConfig
 	Ship    					Ship
 	InitialPlanets 		[]Planet
 	Planets 					[]Planet
@@ -84,7 +109,7 @@ func (game *Game) generateShip() Ship {
 		X: float64(dimensionWidth) / 2,
 		Y: float64(dimensionHeight) - 50,
 		Rotation: 0,
-		MagnetRadius: 75,
+		MagnetRadius: game.GameConfig.MagnetRadius,
 	}
 }
 
@@ -259,8 +284,8 @@ func (game *Game) collectMinerals() {
 			mineral.Y += mineral.VY
 
 			// damping (prevents infinite speed)
-			mineral.VX *= 0.95
-			mineral.VY *= 0.95
+			mineral.VX *= game.GameConfig.MineralDamping
+			mineral.VY *= game.GameConfig.MineralDamping
 			
 			// recalculate distance (NEW position)
 			dx := game.Ship.X - mineral.X
@@ -279,20 +304,20 @@ func (game *Game) collectMinerals() {
 				strength := 1 - (distance / game.Ship.MagnetRadius) // 0 to 1
 
 				// ship's magnetic pull (numbers are placeholders)
-				pull := (0.3 + shipSpeed * 0.1) * strength		
+				pull := (game.GameConfig.MagnetPull + shipSpeed * 0.1) * strength		
 
 				mineral.VX += nx * pull
 				mineral.VY += ny * pull
 
 				// to prevent mineral lag when getting pulled by a fast travelling ship, faster ship = stronger magnet pul
 				// 0.2 is the follow through strength to the ship, 0 = minerals will lag behind a faster ship, X = minerals will reach ship fast
-				follow := 0.2
+				follow := game.GameConfig.MagnetFollowStrength
 				mineral.X += dx * follow
 				mineral.Y += dy * follow
 
 				// dynamic max speed (3 is a placeholder for now)
 				mineralMaxSpeed := shipSpeed + 3
-				mineralSpeed := math.Sqrt(mineral.VX*mineral.VX + mineral.VY*mineral.VY)
+				mineralSpeed := math.Sqrt(mineral.VX * mineral.VX + mineral.VY * mineral.VY)
 
 				if mineralSpeed > mineralMaxSpeed {
 						scale := mineralMaxSpeed / mineralSpeed
@@ -319,8 +344,7 @@ func (game *Game) checkWin() {
 	distance := math.Sqrt(dx*dx + dy*dy)
 
 	if distance < destinationPlanet.Radius {
-		game.GameState = StateWon
-		game.collectStars() 
+		game.getWinResult()
 	}
 }
 
