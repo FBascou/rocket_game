@@ -72,8 +72,6 @@ func (game *Game) resetLevel() {
 	game.Ship = game.generateShip()
 	game.Planets = deepClonePlanets(game.InitialPlanets)
 	game.CollectedMinerals = 0
-	game.CrashCount = 0
-	game.Lives = 5
 }
 
 func (game *Game) resetShipAfterCrash() {
@@ -354,10 +352,6 @@ func (game *Game) updateMenu() {
 	// replay button
 	if isPointInsideRect(mx, my, 100, 380, 200, 40) {
 		game.resetLevel()
-
-		// restore lives 
-		game.Lives = 5
-
 		game.LevelMenuState = LevelMenuClosed
 	}
 
