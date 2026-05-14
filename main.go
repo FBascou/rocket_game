@@ -11,8 +11,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-// Input → changes state → Draw reads state
-
 const dimensionWidth int = 400
 const dimensionHeight int = 600
 // const outlineVectorAlpha float32 = 0.04
@@ -113,7 +111,6 @@ func main() {
 	game.InitialPlanets = deepClonePlanets(game.Planets)
 	game.Lives = 5
 	
-	// game.Menu = game.generateLevelMenu()
 	ebiten.SetWindowSize(dimensionWidth, dimensionHeight)
   ebiten.SetWindowTitle("Ship Express (ShipEx/ShipX)")
 

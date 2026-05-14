@@ -67,9 +67,9 @@ type Game struct {
 	CrashCount				int
 	Lives 						int
 	Stars 						int
-	Dragging bool
-	DragStartX int
-	DragStartY int
+	Dragging 					bool
+	DragStartX				int
+	DragStartY 				int
 }
 
 // Initializes ebiten.Image images for ship, planets, minerals, etc.
