@@ -9,10 +9,10 @@ func (game *Game) applyGravity() {
 		dx := planet.X - game.Ship.X
 		dy := planet.Y - game.Ship.Y
 
-		distance := math.Sqrt(dx*dx + dy*dy)
+		distance := math.Sqrt(dx * dx + dy * dy)
 
-		// collision check
-		if distance < planet.Radius {
+		// collision check + adding CollisionRadius to Ship or else the collision counts the center of the ship with the planet
+		if distance < planet.Size + game.Ship.CollisionRadius {
 			if !planet.IsDestination {
 				game.GameState = StateCrashed
 			}
@@ -24,7 +24,16 @@ func (game *Game) applyGravity() {
 		}
 
 		// 50 is a placeholder to not make it accelerate insanely fast when the ship gets closer to planet
-		force := planet.Gravity / (distance * distance + game.GameConfig.GravityFalloff)
+		// outside gravity field
+		if distance > planet.GravityRadius {
+			continue
+		}
+
+		// force := planet.GravityStrength / (distance*distance + game.GameConfig.GravityFalloff)
+
+		falloff := distance + game.GameConfig.GravityFalloff
+		// force := planet.GravityStrength / falloff
+		force := (planet.GravityStrength * game.GameConfig.DragPreviewGravityStrength) / falloff
 
 		nx := dx / distance
 		ny := dy / distance

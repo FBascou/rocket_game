@@ -79,7 +79,7 @@ func drawPlanetVector(screen *ebiten.Image, planet Planet) {
 			screen,
 			planet.X,
 			planet.Y,
-			planet.Gravity,
+			planet.GravityRadius,
 			color.RGBA{0, 0, 30, 30},
 		)
 
@@ -87,7 +87,7 @@ func drawPlanetVector(screen *ebiten.Image, planet Planet) {
 			screen,
 			float32(planet.X),
 			float32(planet.Y),
-			float32(planet.Radius),
+			float32(planet.Size),
 			color.RGBA{30, 30, 255, 255},
 			false,
 		)
@@ -96,7 +96,7 @@ func drawPlanetVector(screen *ebiten.Image, planet Planet) {
 			screen,
 			planet.X,
 			planet.Y,
-			planet.Gravity,
+			planet.GravityRadius,
 			color.RGBA{30, 0, 0, 30},
 		)
 
@@ -104,7 +104,7 @@ func drawPlanetVector(screen *ebiten.Image, planet Planet) {
 			screen,
 			float32(planet.X),
 			float32(planet.Y),
-			float32(planet.Radius),
+			float32(planet.Size),
 			color.RGBA{255, 30, 30, 255},
 			false,
 		)
@@ -254,19 +254,23 @@ func (game *Game) drawDragIndicator(screen *ebiten.Image) {
 				continue
 			}
 
-			// allows the line to bends immediately at the planet's gravity pull edge
-			gravityRadius := planet.Gravity
-
-			strength := 1.0 - (distance / gravityRadius)
-
-			if strength < 0 {
-					strength = 0
+			// outside gravity field
+			if distance > planet.GravityRadius {
+				continue
 			}
 
-			force := strength * 0.12
+			// 0.12 tuning constant means how strongly should the preview line bend visually to the planet gravity (visual prediction)
+			// force := planet.GravityStrength / (distance * distance + game.GameConfig.GravityFalloff)
+			falloff := distance + game.GameConfig.GravityFalloff
+			// force := planet.GravityStrength / falloff
+			force := (planet.GravityStrength * game.GameConfig.DragPreviewGravityStrength) / falloff
 
-			vx += (dx / distance) * force
-			vy += (dy / distance) * force
+
+			nx := dx / distance
+			ny := dy / distance
+
+			vx += nx * force
+			vy += ny * force
 		}
 
 		// add friction

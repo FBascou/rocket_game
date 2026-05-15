@@ -92,12 +92,13 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHe
 func main() {
 	game := &Game{}
 	game.GameConfig = GameConfig{
-    DragLineSteps:        15,
-		DragPreviewStep: 			2.0,
-    LaunchPower:          0.1,
+    DragLineSteps:        30,
+		DragPreviewStep: 			1.0,
+		DragPreviewGravityStrength: 10.0,
+    LaunchPower:          0.12,
     MaxLaunchSpeed:       6,
     ShipFriction:         0.99,
-    MaxShipSpeed:         7,
+    MaxShipSpeed:         6,
     MagnetRadius:         75,
     MagnetPull:           0.3,
     MagnetFollowStrength: 0.2,

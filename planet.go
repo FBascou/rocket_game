@@ -1,12 +1,15 @@
 package main
 
 type Planet struct {
-	X, Y          float64
-	Radius        float64
-	Gravity       float64
-	Size          int
-	Minerals      []Mineral
-	IsDestination bool
+	X, Y float64
+	// Physical size
+	Size float64
+	// Gravity field size
+	GravityRadius float64
+	// Gravity pull size
+	GravityStrength float64
+	Minerals        []Mineral
+	IsDestination   bool
 }
 
 // Getter function

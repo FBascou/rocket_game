@@ -19,6 +19,8 @@ type GameConfig struct {
 	DragLineSteps        int
 	// Drag line dot space multiplier
 	DragPreviewStep float64
+	// Gravity Strength affects the direction drag preview 
+	DragPreviewGravityStrength float64
 
 	// Ship's initial launch speed
 	LaunchPower          float64
@@ -110,6 +112,7 @@ func (game *Game) generateShip() Ship {
 		Y: float64(dimensionHeight) - 50,
 		Rotation: 0,
 		MagnetRadius: game.GameConfig.MagnetRadius,
+		CollisionRadius: 6,
 	}
 }
 
@@ -124,10 +127,13 @@ func (game *Game) generatePlanets() []Planet {
 	bottomMargin := 120.0
 
 	usableHeight := screenH - topMargin - bottomMargin
-	// stepY := usableHeight / float64(numberOfPlanets)
+	// value that affexts the vertical distance between planets
+	// add a verticalSpacingMultiplier := 1.4
+	// stepY := (usableHeight / float64(numberOfPlanets + 1)) * verticalSpacingMultiplier
 	stepY := usableHeight / float64(numberOfPlanets + 1)
 
 	centerX := screenW / 2
+	// static value that affects the horizontal distance between planets
 	xVariation := 60.0
 
 	planets := []Planet{}
@@ -151,6 +157,7 @@ func (game *Game) generatePlanets() []Planet {
 			}
 			// planet x position = center + left/right offset
 			// 20 + rand.Float64() (0 to 1) * 40 = random number between 20 and 60 px
+			// currently creates a 20-60px left/right offset
 			x := centerX + direction * (20 + rand.Float64() * 40)
 
 			// a bit of planet x randomness (more linear than above)
@@ -163,8 +170,12 @@ func (game *Game) generatePlanets() []Planet {
 			planet = Planet{
 				X: x,
 				Y: y,
-				Radius: 30,
-				Gravity: 80,
+				// physical size
+				Size: 30,
+				// gravity field size
+				GravityRadius: 80,
+				// pull force
+				GravityStrength: 1,
 			}
 
 			validPlanet = true
@@ -180,7 +191,8 @@ func (game *Game) generatePlanets() []Planet {
 
 				// adding planet padding between each other
 				// are the circles/planets touching (+ padding)
-				if dist < existing.Radius + planet.Radius + 30 {
+				// this controls how close planets are allowed to spawn
+				if dist < existing.Size + planet.Size + 30 {
 					validPlanet = false
 					break
 				}
@@ -210,8 +222,9 @@ func (game *Game) generatePlanets() []Planet {
 		destinationPlanet = Planet{
 			X: x,
 			Y: y,
-			Radius: 50,
-			Gravity: 200, 
+			Size: 50,
+			GravityRadius: 140,
+			GravityStrength: 2.5, 
 			IsDestination: true,
 		}
 
@@ -222,7 +235,7 @@ func (game *Game) generatePlanets() []Planet {
 			dy := existing.Y - destinationPlanet.Y
 			dist := math.Sqrt(dx * dx + dy * dy)
 
-			if dist < existing.Radius + destinationPlanet.Radius + 40 {
+			if dist < existing.Size + destinationPlanet.Size + 40 {
 				validDestination = false
 				break
 			}
@@ -242,7 +255,7 @@ func (game *Game) generateMinerals(planet Planet, count int) []Mineral {
 		angle := rand.Float64() * 2 * math.Pi
 		// uniform distribution of minerals across the circle
 		// minerals distribute evenly over the whole planet area
-		radius := math.Sqrt(rand.Float64()) * planet.Radius
+		radius := math.Sqrt(rand.Float64()) * planet.Size
 
 		x := planet.X + radius * math.Cos(angle)
 		y := planet.Y + radius * math.Sin(angle)
@@ -343,7 +356,7 @@ func (game *Game) checkWin() {
 
 	distance := math.Sqrt(dx*dx + dy*dy)
 
-	if distance < destinationPlanet.Radius {
+	if distance < destinationPlanet.Size {
 		game.getWinResult()
 	}
 }
