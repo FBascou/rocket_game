@@ -1,4 +1,7 @@
-# ignore all .txt files
+# ignore all files with:
 *.txt
 *.sh
 *.ps1
+
+# ignore .vscode folder
+/.vscode

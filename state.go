@@ -41,7 +41,7 @@ func (game *Game) updateFlying() {
 	game.applySpeedDamping()
 
 	// clamps all ship's speed, including if accelerated by gravity to 6
-	// it's just here to test gameplay 
+	// it's just here to test gameplay
 	// game.Ship.VX, game.Ship.VY = clampVelocity(game.Ship.VX, game.Ship.VY, 6)
 
 	game.collectMinerals()
@@ -52,10 +52,10 @@ func (game *Game) updateFlying() {
 	game.Ship.Y += game.Ship.VY
 
 	// ship's speed (vector magnitude)
-		speed := math.Sqrt(game.Ship.VX * game.Ship.VX + game.Ship.VY * game.Ship.VY)
+	speed := math.Sqrt(game.Ship.VX*game.Ship.VX + game.Ship.VY*game.Ship.VY)
 
 	if speed > 0.1 {
-		game.Ship.Rotation = math.Atan2(game.Ship.VY, game.Ship.VX) + math.Pi / 2
+		game.Ship.Rotation = math.Atan2(game.Ship.VY, game.Ship.VX) + math.Pi/2
 	}
 }
 

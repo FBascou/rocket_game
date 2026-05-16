@@ -11,12 +11,17 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-const dimensionWidth int = 400
+const dimensionWidth int = 800
 const dimensionHeight int = 600
+
 // const outlineVectorAlpha float32 = 0.04
 
 // runs every frame (~60 times per second)
 func (game *Game) Update() error {
+
+	// update GameConfig debugging
+	game.updateDebugTuner()
+
 	// open menu after some level event (crash, win, lose, etc.)
 	if game.LevelMenuState != LevelMenuClosed {
 		game.updateMenu()
@@ -40,16 +45,16 @@ func (game *Game) Update() error {
 	}
 
 	switch game.GameState {
-		case StateAiming:
-			game.updateAiming()
-		case StateFlying:
-			game.updateFlying()
-		case StateCrashed:
-			game.updateCrashed()
-		case StateWon:
-			game.updateWon()
-		case StateLost:
-			game.updateLost()
+	case StateAiming:
+		game.updateAiming()
+	case StateFlying:
+		game.updateFlying()
+	case StateCrashed:
+		game.updateCrashed()
+	case StateWon:
+		game.updateWon()
+	case StateLost:
+		game.updateLost()
 	}
 
 	return nil
@@ -62,6 +67,9 @@ func (game *Game) Draw(screen *ebiten.Image) {
 	game.drawShip(screen)
 	game.drawPlanets(screen)
 	game.drawMinerals(screen)
+
+	// Draw GameConfig debug
+	game.drawDebugTuner(screen)
 
 	// draw the line when dragging
 	if game.Dragging {
@@ -92,18 +100,18 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHe
 func main() {
 	game := &Game{}
 	game.GameConfig = GameConfig{
-    DragLineSteps:        30,
-		DragPreviewStep: 			1.0,
+		DragLineSteps:              30,
+		DragPreviewStep:            1.0,
 		DragPreviewGravityStrength: 10.0,
-    LaunchPower:          0.12,
-    MaxLaunchSpeed:       6,
-    ShipFriction:         0.99,
-    MaxShipSpeed:         6,
-    MagnetRadius:         75,
-    MagnetPull:           0.3,
-    MagnetFollowStrength: 0.2,
-    MineralDamping:       0.95,
-    GravityFalloff:       50,
+		LaunchPower:                0.12,
+		MaxLaunchSpeed:             6,
+		ShipFriction:               0.99,
+		MaxShipSpeed:               6,
+		MagnetRadius:               75,
+		MagnetPull:                 0.3,
+		MagnetFollowStrength:       0.2,
+		MineralDamping:             0.95,
+		GravityFalloff:             50,
 	}
 	game.GameState = StateAiming
 	game.initializeAssets()
@@ -111,9 +119,9 @@ func main() {
 	game.Planets = game.generatePlanets()
 	game.InitialPlanets = deepClonePlanets(game.Planets)
 	game.Lives = 5
-	
+
 	ebiten.SetWindowSize(dimensionWidth, dimensionHeight)
-  ebiten.SetWindowTitle("Ship Express (ShipEx/ShipX)")
+	ebiten.SetWindowTitle("Ship Express (ShipEx/ShipX)")
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)

@@ -12,7 +12,7 @@ import (
 )
 
 type RadomXY struct {
-	X, Y float64	
+	X, Y float64
 }
 
 // Interface for getter functions
@@ -54,20 +54,20 @@ func getTotalMineralsInLevel(planets []Planet) int {
 }
 
 // Deep cloning planets and minerals for level restart
-// Should be used for replaying whole level and restarting entire game 
+// Should be used for replaying whole level and restarting entire game
 func deepClonePlanets(planets []Planet) []Planet {
-    cloned := make([]Planet, len(planets))
+	cloned := make([]Planet, len(planets))
 
-    for index, planet := range planets {
-        cloned[index] = planet
+	for index, planet := range planets {
+		cloned[index] = planet
 
-        clonedMinerals := make([]Mineral, len(planet.Minerals))
-        copy(clonedMinerals, planet.Minerals)
+		clonedMinerals := make([]Mineral, len(planet.Minerals))
+		copy(clonedMinerals, planet.Minerals)
 
-        cloned[index].Minerals = clonedMinerals
-    }
+		cloned[index].Minerals = clonedMinerals
+	}
 
-    return cloned
+	return cloned
 }
 
 func (game *Game) drawButton(
@@ -98,7 +98,7 @@ func isPointInsideRect(
 	x, y, w, h float64,
 ) bool {
 	return float64(px) >= x &&
-		float64(px) <= x + w &&
+		float64(px) <= x+w &&
 		float64(py) >= y &&
-		float64(py) <= y + h
+		float64(py) <= y+h
 }

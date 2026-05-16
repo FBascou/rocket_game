@@ -14,36 +14,48 @@ type Assets struct {
 	MineralImage *ebiten.Image
 }
 
+type DebugVariable struct {
+	Name  string
+	Step  float64
+	Value *float64
+}
+
+type DebugIntVariable struct {
+	Name  string
+	Step  int
+	Value *int
+}
+
 type GameConfig struct {
 	// Drag line dot amount
-	DragLineSteps        int
+	DragLineSteps int
 	// Drag line dot space multiplier
 	DragPreviewStep float64
-	// Gravity Strength affects the direction drag preview 
+	// Gravity Strength affects the direction drag preview
 	DragPreviewGravityStrength float64
 
 	// Ship's initial launch speed
-	LaunchPower          float64
-	MaxLaunchSpeed       float64
+	LaunchPower    float64
+	MaxLaunchSpeed float64
 
 	// Ship's speed
-	ShipFriction         float64
-	MaxShipSpeed         float64
-	
+	ShipFriction float64
+	MaxShipSpeed float64
+
 	// Ship's magnet strength
 	MagnetRadius         float64
 	MagnetPull           float64
 	MagnetFollowStrength float64
 	MineralDamping       float64
-	
+
 	// Planet gravity
-	GravityFalloff       float64
+	GravityFalloff float64
 }
 
 type Level struct {
 	screenWidth  int
 	screenHeight int
-} 
+}
 
 type GameState int
 
@@ -56,22 +68,24 @@ const (
 )
 
 type Game struct {
-	Assets 						Assets
-	Level 						Level
-	LevelMenuState		LevelMenuState
-	GameState					GameState
-	GameConfig				GameConfig
-	Ship    					Ship
-	InitialPlanets 		[]Planet
-	Planets 					[]Planet
-	LevelNumber 			int
-	CollectedMinerals int
-	CrashCount				int
-	Lives 						int
-	Stars 						int
-	Dragging 					bool
-	DragStartX				int
-	DragStartY 				int
+	Assets             Assets
+	Level              Level
+	LevelMenuState     LevelMenuState
+	GameState          GameState
+	GameConfig         GameConfig
+	Ship               Ship
+	InitialPlanets     []Planet
+	Planets            []Planet
+	LevelNumber        int
+	CollectedMinerals  int
+	CrashCount         int
+	Lives              int
+	Stars              int
+	Dragging           bool
+	DragStartX         int
+	DragStartY         int
+	DebugMode          bool
+	DebugSelectedIndex int
 }
 
 // Initializes ebiten.Image images for ship, planets, minerals, etc.
@@ -79,7 +93,7 @@ func (game *Game) initializeAssets() {
 	game.Assets.ShipImage = loadImage("assets/ship.png")
 }
 
-// This should be called when: 
+// This should be called when:
 // starting the next/new level,
 // restarting entire game
 func (game *Game) initializeNewLevel() {
@@ -90,8 +104,8 @@ func (game *Game) initializeNewLevel() {
 }
 
 // This should be called when:
-// resetting ship only, 
-// restore minerals to original state, 
+// resetting ship only,
+// restore minerals to original state,
 // not regenerating planets,
 // restart the same level if player crashed less than 5 times
 func (game *Game) resetLevel() {
@@ -108,10 +122,10 @@ func (game *Game) resetShipAfterCrash() {
 
 func (game *Game) generateShip() Ship {
 	return Ship{
-		X: float64(dimensionWidth) / 2,
-		Y: float64(dimensionHeight) - 50,
-		Rotation: 0,
-		MagnetRadius: game.GameConfig.MagnetRadius,
+		X:               float64(dimensionWidth) / 2,
+		Y:               float64(dimensionHeight) - 50,
+		Rotation:        0,
+		MagnetRadius:    game.GameConfig.MagnetRadius,
 		CollisionRadius: 6,
 	}
 }
@@ -119,7 +133,7 @@ func (game *Game) generateShip() Ship {
 func (game *Game) generatePlanets() []Planet {
 	// min 1 planet, max 3 planets (not including destination panet)
 	numberOfPlanets := 1 + rand.IntN(3)
-	
+
 	screenW := float64(dimensionWidth)
 	screenH := float64(dimensionHeight)
 
@@ -130,7 +144,7 @@ func (game *Game) generatePlanets() []Planet {
 	// value that affexts the vertical distance between planets
 	// add a verticalSpacingMultiplier := 1.4
 	// stepY := (usableHeight / float64(numberOfPlanets + 1)) * verticalSpacingMultiplier
-	stepY := usableHeight / float64(numberOfPlanets + 1)
+	stepY := usableHeight / float64(numberOfPlanets+1)
 
 	centerX := screenW / 2
 	// static value that affects the horizontal distance between planets
@@ -152,20 +166,20 @@ func (game *Game) generatePlanets() []Planet {
 			// a bit of planet x randomness with a left-path (more zig-zag)
 			// direction alternates left/right (offset)
 			direction := 1.0
-			if i % 2 == 0 {
+			if i%2 == 0 {
 				direction = -1.0
 			}
 			// planet x position = center + left/right offset
 			// 20 + rand.Float64() (0 to 1) * 40 = random number between 20 and 60 px
 			// currently creates a 20-60px left/right offset
-			x := centerX + direction * (20 + rand.Float64() * 40)
+			x := centerX + direction*(20+rand.Float64()*40)
 
 			// a bit of planet x randomness (more linear than above)
 			// x := centerX + (rand.Float64() * 2 - 1) * xVariation
 
 			// controlled planet y variation
 			// y := bottomMargin + float64(i) * stepY
-			y := bottomMargin + float64(i + 1) * stepY
+			y := bottomMargin + float64(i+1)*stepY
 
 			planet = Planet{
 				X: x,
@@ -187,12 +201,12 @@ func (game *Game) generatePlanets() []Planet {
 				// vertical difference between 2 planets
 				dy := existing.Y - planet.Y
 				// distance between 2 planets (vector between two objects)
-				dist := math.Sqrt(dx * dx + dy * dy)
+				dist := math.Sqrt(dx*dx + dy*dy)
 
 				// adding planet padding between each other
 				// are the circles/planets touching (+ padding)
 				// this controls how close planets are allowed to spawn
-				if dist < existing.Size + planet.Size + 30 {
+				if dist < existing.Size+planet.Size+30 {
 					validPlanet = false
 					break
 				}
@@ -202,30 +216,30 @@ func (game *Game) generatePlanets() []Planet {
 		planet.Minerals = game.generateMinerals(planet, numberOfMinerals)
 		planets = append(planets, planet)
 	}
-	
+
 	var destinationPlanet Planet
 	validDestination := false
 
 	// if there's not enough space in the window, there could be an infinite loop
-	// this is a safety counter to avoid an infinite loop if 
+	// this is a safety counter to avoid an infinite loop if
 	attempts := 0
-	
+
 	for !validDestination && attempts < 50 {
 		attempts++
 		// centerX + ((rand between -1 and +1) * 60) = centerX +- 60
 		// centers destination planet with horizontal skew
-		x := centerX + (rand.Float64() * 2 - 1) * xVariation
+		x := centerX + (rand.Float64()*2-1)*xVariation
 
 		// gives space between planets and top edge
 		y := topMargin + 20
 
 		destinationPlanet = Planet{
-			X: x,
-			Y: y,
-			Size: 50,
-			GravityRadius: 140,
-			GravityStrength: 2.5, 
-			IsDestination: true,
+			X:               x,
+			Y:               y,
+			Size:            50,
+			GravityRadius:   140,
+			GravityStrength: 2.5,
+			IsDestination:   true,
 		}
 
 		validDestination = true
@@ -233,9 +247,9 @@ func (game *Game) generatePlanets() []Planet {
 		for _, existing := range planets {
 			dx := existing.X - destinationPlanet.X
 			dy := existing.Y - destinationPlanet.Y
-			dist := math.Sqrt(dx * dx + dy * dy)
+			dist := math.Sqrt(dx*dx + dy*dy)
 
-			if dist < existing.Size + destinationPlanet.Size + 40 {
+			if dist < existing.Size+destinationPlanet.Size+40 {
 				validDestination = false
 				break
 			}
@@ -257,8 +271,8 @@ func (game *Game) generateMinerals(planet Planet, count int) []Mineral {
 		// minerals distribute evenly over the whole planet area
 		radius := math.Sqrt(rand.Float64()) * planet.Size
 
-		x := planet.X + radius * math.Cos(angle)
-		y := planet.Y + radius * math.Sin(angle)
+		x := planet.X + radius*math.Cos(angle)
+		y := planet.Y + radius*math.Sin(angle)
 
 		valid := true
 
@@ -299,25 +313,25 @@ func (game *Game) collectMinerals() {
 			// damping (prevents infinite speed)
 			mineral.VX *= game.GameConfig.MineralDamping
 			mineral.VY *= game.GameConfig.MineralDamping
-			
+
 			// recalculate distance (NEW position)
 			dx := game.Ship.X - mineral.X
 			dy := game.Ship.Y - mineral.Y
 
-			distance := math.Sqrt(dx * dx + dy * dy)
+			distance := math.Sqrt(dx*dx + dy*dy)
 
 			// ship's magnet pull strength and mineral's speed
 			if distance > 0 && distance < game.Ship.MagnetRadius {
 				nx := dx / distance
 				ny := dy / distance
 
-				shipSpeed := math.Sqrt(game.Ship.VX * game.Ship.VX + game.Ship.VY * game.Ship.VY)
+				shipSpeed := math.Sqrt(game.Ship.VX*game.Ship.VX + game.Ship.VY*game.Ship.VY)
 
 				// base magnet pull with smooth acceleration, becomes stronger when closer (far=weak pull, near=strong pull)
 				strength := 1 - (distance / game.Ship.MagnetRadius) // 0 to 1
 
 				// ship's magnetic pull (numbers are placeholders)
-				pull := (game.GameConfig.MagnetPull + shipSpeed * 0.1) * strength		
+				pull := (game.GameConfig.MagnetPull + shipSpeed*0.1) * strength
 
 				mineral.VX += nx * pull
 				mineral.VY += ny * pull
@@ -330,12 +344,12 @@ func (game *Game) collectMinerals() {
 
 				// dynamic max speed (3 is a placeholder for now)
 				mineralMaxSpeed := shipSpeed + 3
-				mineralSpeed := math.Sqrt(mineral.VX * mineral.VX + mineral.VY * mineral.VY)
+				mineralSpeed := math.Sqrt(mineral.VX*mineral.VX + mineral.VY*mineral.VY)
 
 				if mineralSpeed > mineralMaxSpeed {
-						scale := mineralMaxSpeed / mineralSpeed
-						mineral.VX *= scale
-						mineral.VY *= scale
+					scale := mineralMaxSpeed / mineralSpeed
+					mineral.VX *= scale
+					mineral.VY *= scale
 				}
 			}
 
@@ -375,7 +389,7 @@ func (game *Game) collectStars() {
 	} else if is1star {
 		game.Stars = 1 // No minerals + not all lives
 	} else {
-		game.Stars = 0 // No minerals + 0 lives 
+		game.Stars = 0 // No minerals + 0 lives
 	}
 }
 

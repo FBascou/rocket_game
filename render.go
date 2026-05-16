@@ -44,14 +44,14 @@ func drawShipVector(screen *ebiten.Image, ship Ship) {
 	x := float32(ship.X)
 	y := float32(ship.Y)
 
-	frontX := x + float32(math.Cos(ship.Rotation - math.Pi / 2)) * size
-	frontY := y + float32(math.Sin(ship.Rotation - math.Pi / 2)) * size
+	frontX := x + float32(math.Cos(ship.Rotation-math.Pi/2))*size
+	frontY := y + float32(math.Sin(ship.Rotation-math.Pi/2))*size
 
-	leftX := x + float32(math.Cos(ship.Rotation + math.Pi * 0.75)) * size
-	leftY := y + float32(math.Sin(ship.Rotation + math.Pi * 0.75)) * size
+	leftX := x + float32(math.Cos(ship.Rotation+math.Pi*0.75))*size
+	leftY := y + float32(math.Sin(ship.Rotation+math.Pi*0.75))*size
 
-	rightX := x + float32(math.Cos(ship.Rotation - math.Pi * 0.75)) * size
-	rightY := y + float32(math.Sin(ship.Rotation - math.Pi * 0.75)) * size
+	rightX := x + float32(math.Cos(ship.Rotation-math.Pi*0.75))*size
+	rightY := y + float32(math.Sin(ship.Rotation-math.Pi*0.75))*size
 
 	vector.StrokeLine(screen, frontX, frontY, leftX, leftY, 2, color.White, false)
 	vector.StrokeLine(screen, leftX, leftY, rightX, rightY, 2, color.White, false)
@@ -129,7 +129,6 @@ func (game *Game) drawLevelMenu(screen *ebiten.Image) {
 		false,
 	)
 
-
 	// menu panel
 	panelX := 50.0
 	panelY := 150.0
@@ -146,20 +145,20 @@ func (game *Game) drawLevelMenu(screen *ebiten.Image) {
 		false, // anti-aliasing
 	)
 
-	// title of menu 
+	// title of menu
 	title := "PAUSED"
 
 	if game.LevelMenuState == LevelMenuCrash {
-	title = "SHIP DESTROYED"
-}
+		title = "SHIP DESTROYED"
+	}
 
-if game.LevelMenuState == LevelMenuWin {
-	title = "LEVEL COMPLETE"
-}
+	if game.LevelMenuState == LevelMenuWin {
+		title = "LEVEL COMPLETE"
+	}
 
-if game.LevelMenuState == LevelMenuLose {
-	title = "YOU LOST"
-}
+	if game.LevelMenuState == LevelMenuLose {
+		title = "YOU LOST"
+	}
 
 	ebitenutil.DebugPrintAt(screen, title, 120, 180)
 
@@ -181,17 +180,17 @@ if game.LevelMenuState == LevelMenuLose {
 	// fake buttons for now
 	game.drawButton(screen, 100, 320, 200, 40, "SETTINGS")
 	game.drawButton(screen, 100, 380, 200, 40, "REPLAY")
-	
+
 	switch game.LevelMenuState {
-		case LevelMenuWin:
-			// if win
-			game.drawButton(screen, 100, 440, 200, 40, "NEXT LEVEL")
-		case LevelMenuCrash:
-			// if crash
-			game.drawButton(screen, 100, 440, 200, 40, "KEEP PLAYING")
-		default:
-			// if pause
-			game.drawButton(screen, 100, 440, 200, 40, "RESUME")
+	case LevelMenuWin:
+		// if win
+		game.drawButton(screen, 100, 440, 200, 40, "NEXT LEVEL")
+	case LevelMenuCrash:
+		// if crash
+		game.drawButton(screen, 100, 440, 200, 40, "KEEP PLAYING")
+	default:
+		// if pause
+		game.drawButton(screen, 100, 440, 200, 40, "RESUME")
 	}
 	// game.drawButton(screen, 100, 440, 200, 40, "X")
 }
@@ -207,10 +206,10 @@ func (game *Game) drawMinerals(screen *ebiten.Image) {
 
 			for dx := -2; dx <= 2; dx++ {
 				for dy := -2; dy <= 2; dy++ {
-					speed := math.Sqrt(m.VX * m.VX + m.VY * m.VY)
-					brightness := uint8(math.Min(255, speed * 50))
+					speed := math.Sqrt(m.VX*m.VX + m.VY*m.VY)
+					brightness := uint8(math.Min(255, speed*50))
 					col := color.RGBA{brightness, 255, brightness, 255}
-					screen.Set(int(m.X) + dx, int(m.Y) + dy, col)
+					screen.Set(int(m.X)+dx, int(m.Y)+dy, col)
 				}
 			}
 		}
@@ -240,7 +239,7 @@ func (game *Game) drawDragIndicator(screen *ebiten.Image) {
 
 	steps := game.GameConfig.DragLineSteps
 
-  // simple dotted line (step-based) when dragging the ship
+	// simple dotted line (step-based) when dragging the ship
 	for i := 0; i < steps; i++ {
 		// fake gravity preview
 		for _, planet := range game.Planets {
@@ -248,7 +247,7 @@ func (game *Game) drawDragIndicator(screen *ebiten.Image) {
 			dx := planet.X - px
 			dy := planet.Y - py
 
-			distance := math.Sqrt(dx * dx + dy * dy)
+			distance := math.Sqrt(dx*dx + dy*dy)
 
 			if distance < 1 {
 				continue
@@ -265,7 +264,6 @@ func (game *Game) drawDragIndicator(screen *ebiten.Image) {
 			// force := planet.GravityStrength / falloff
 			force := (planet.GravityStrength * game.GameConfig.DragPreviewGravityStrength) / falloff
 
-
 			nx := dx / distance
 			ny := dy / distance
 
@@ -275,7 +273,7 @@ func (game *Game) drawDragIndicator(screen *ebiten.Image) {
 
 		// add friction
 		vx *= game.GameConfig.ShipFriction
-    vy *= game.GameConfig.ShipFriction
+		vy *= game.GameConfig.ShipFriction
 
 		// preview step multiplier to make dots more spaced
 		previewStep := game.GameConfig.DragPreviewStep
@@ -293,10 +291,10 @@ func (game *Game) drawDragIndicator(screen *ebiten.Image) {
 
 		// radius of drag line dots
 		// 2 means radius near ship (minimum dot radius), 1 means extra growth amount
-		radius := 2 - t * 1
+		radius := 2 - t*1
 
 		// transparency - first dots have less opacity, last dots have more opacity
-		alpha := uint8(120 + t * 135)
+		alpha := uint8(120 + t*135)
 
 		drawFilledCircle(
 			screen,

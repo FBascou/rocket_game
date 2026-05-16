@@ -9,10 +9,10 @@ func (game *Game) applyGravity() {
 		dx := planet.X - game.Ship.X
 		dy := planet.Y - game.Ship.Y
 
-		distance := math.Sqrt(dx * dx + dy * dy)
+		distance := math.Sqrt(dx*dx + dy*dy)
 
 		// collision check + adding CollisionRadius to Ship or else the collision counts the center of the ship with the planet
-		if distance < planet.Size + game.Ship.CollisionRadius {
+		if distance < planet.Size+game.Ship.CollisionRadius {
 			if !planet.IsDestination {
 				game.GameState = StateCrashed
 			}
@@ -20,7 +20,7 @@ func (game *Game) applyGravity() {
 
 		if distance < 1 {
 			// continue skips only one interation and moves on to the next planet in the loop
-				continue
+			continue
 		}
 
 		// 50 is a placeholder to not make it accelerate insanely fast when the ship gets closer to planet
@@ -57,7 +57,7 @@ func (game *Game) applyFriction() {
 // It only activates when speed becomes too high
 // Limits gravity acceleration once the ship is launched
 func (game *Game) applySpeedDamping() {
-	speed := math.Sqrt(game.Ship.VX * game.Ship.VX + game.Ship.VY * game.Ship.VY)
+	speed := math.Sqrt(game.Ship.VX*game.Ship.VX + game.Ship.VY*game.Ship.VY)
 
 	// if ship becomes too fast, gradually slow it down
 	// 0.98 means keep 98% of current speed every frame so the ship loses 2% speed per frame
@@ -71,7 +71,7 @@ func (game *Game) applySpeedDamping() {
 func clampVelocity(vx, vy, max float64) (float64, float64) {
 	// speed = length of velocity vector:
 	// pythagorean theorem: speed² = vx² + vy² => speed = √(vx² + vy²)
-	speed := math.Sqrt(vx * vx + vy * vy)
+	speed := math.Sqrt(vx*vx + vy*vy)
 
 	if speed > max {
 		scale := max / speed
