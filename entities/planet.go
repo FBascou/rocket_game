@@ -1,4 +1,8 @@
-package main
+package entities
+
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type Planet struct {
 	X, Y float64
@@ -10,14 +14,18 @@ type Planet struct {
 	GravityStrength float64
 	Minerals        []Mineral
 	IsDestination   bool
+
+	BodyType  BodyType
+	SpriteKey string
+	Sprite    *ebiten.Image
 }
 
 // Getter function
-func (p Planet) GetX() float64 {
-	return p.X
+func (planet Planet) GetX() float64 {
+	return planet.X
 }
 
 // Getter function
-func (p Planet) GetY() float64 {
-	return p.Y
+func (planet Planet) GetY() float64 {
+	return planet.Y
 }

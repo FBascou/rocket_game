@@ -1,4 +1,4 @@
-package main
+package entities
 
 type Ship struct {
 	X, Y            float64

@@ -1,4 +1,4 @@
-package main
+package entities
 
 type Mineral struct {
 	X, Y      float64

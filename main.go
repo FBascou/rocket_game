@@ -1,105 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"image/color"
 	_ "image/png"
 	"log"
 
+	"github.com/FBascou/rocket_game/game"
+	"github.com/FBascou/rocket_game/shared"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
-
-const dimensionWidth int = 800
-const dimensionHeight int = 600
-
-// const outlineVectorAlpha float32 = 0.04
-
-// runs every frame (~60 times per second)
-func (game *Game) Update() error {
-
-	// update GameConfig debugging
-	game.updateDebugTuner()
-
-	// open menu after some level event (crash, win, lose, etc.)
-	if game.LevelMenuState != LevelMenuClosed {
-		game.updateMenu()
-
-		// close menu with "P"
-		if inpututil.IsKeyJustPressed(ebiten.KeyP) {
-			game.LevelMenuState = LevelMenuClosed
-		}
-
-		return nil
-	}
-
-	// open menu with "P"
-	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
-		game.LevelMenuState = LevelMenuPause
-	}
-
-	// restart game only for testing
-	if ebiten.IsKeyPressed(ebiten.Key(ebiten.KeyR)) {
-		game.initializeNewLevel()
-	}
-
-	switch game.GameState {
-	case StateAiming:
-		game.updateAiming()
-	case StateFlying:
-		game.updateFlying()
-	case StateCrashed:
-		game.updateCrashed()
-	case StateWon:
-		game.updateWon()
-	case StateLost:
-		game.updateLost()
-	}
-
-	return nil
-}
-
-func (game *Game) Draw(screen *ebiten.Image) {
-	// fill screen background color with black
-	screen.Fill(color.Black)
-
-	game.drawShip(screen)
-	game.drawPlanets(screen)
-	game.drawMinerals(screen)
-
-	// Draw GameConfig debug
-	game.drawDebugTuner(screen)
-
-	// draw the line when dragging
-	if game.Dragging {
-		game.drawDragIndicator(screen)
-	}
-
-	// create a func for showing score below
-	if game.GameState == StateWon {
-		ebitenutil.DebugPrint(screen, fmt.Sprintf("Minerals: %d, Lives: %d, Stars: %d", game.CollectedMinerals, game.Lives, game.Stars))
-	} else {
-		if game.GameState == StateLost {
-			ebitenutil.DebugPrint(screen, "YOU LOST")
-		} else {
-			ebitenutil.DebugPrint(screen, fmt.Sprintf("Minerals: %d, Lives: %d, Crash count: %d", game.CollectedMinerals, game.Lives, game.CrashCount))
-		}
-	}
-
-	if game.LevelMenuState != LevelMenuClosed {
-		game.drawLevelMenu(screen)
-	}
-}
-
-func (game *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return dimensionWidth, dimensionHeight
-}
 
 // Function that initializes the game and its assets
 func main() {
-	game := &Game{}
-	game.GameConfig = GameConfig{
+	g := &game.Game{}
+	g.ScreenWidth = game.ScreenWidth
+	g.ScreenHeight = game.ScreenHeight
+	g.GameConfig = game.GameConfig{
 		DragLineSteps:              30,
 		DragPreviewStep:            1.0,
 		DragPreviewGravityStrength: 10.0,
@@ -113,17 +28,15 @@ func main() {
 		MineralDamping:             0.95,
 		GravityFalloff:             50,
 	}
-	game.GameState = StateAiming
-	game.initializeAssets()
-	game.Ship = game.generateShip()
-	game.Planets = game.generatePlanets()
-	game.InitialPlanets = deepClonePlanets(game.Planets)
-	game.Lives = 5
+	g.GameState = shared.StateAiming
+	g.Lives = 5
+	g.InitializeAssets()
+	g.LoadLevel(0)
 
-	ebiten.SetWindowSize(dimensionWidth, dimensionHeight)
+	ebiten.SetWindowSize(g.ScreenWidth, g.ScreenHeight)
 	ebiten.SetWindowTitle("Ship Express (ShipEx/ShipX)")
 
-	if err := ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
 }

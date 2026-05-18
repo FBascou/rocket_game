@@ -1,10 +1,13 @@
-package main
+package game
 
 import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+
+	"github.com/FBascou/rocket_game/physics"
+	"github.com/FBascou/rocket_game/shared"
 )
 
 func (game *Game) updateAiming() {
@@ -28,17 +31,35 @@ func (game *Game) updateAiming() {
 		vy := dy * game.GameConfig.LaunchPower
 
 		// limit ship's initial speed/launch energy (6 is a placeholder) if dragged too hard
-		game.Ship.VX, game.Ship.VY = clampVelocity(vx, vy, game.GameConfig.MaxLaunchSpeed)
+		game.Ship.VX, game.Ship.VY = physics.ClampVelocity(vx, vy, game.GameConfig.MaxLaunchSpeed)
 
 		// now ship can move and physics are applied
-		game.GameState = StateFlying
+		game.GameState = shared.StateFlying
 	}
 }
 
 func (game *Game) updateFlying() {
-	game.applyGravity()
-	game.applyFriction()
-	game.applySpeedDamping()
+	hasShipCrashed := physics.ApplyGravity(
+		&game.Ship,
+		game.Planets,
+		game.GameConfig.GravityFalloff,
+		game.GameConfig.DragPreviewGravityStrength,
+	)
+
+	if hasShipCrashed {
+		game.GameState = shared.StateCrashed
+		return
+	}
+
+	physics.ApplyFriction(
+		&game.Ship,
+		game.GameConfig.ShipFriction,
+	)
+
+	physics.ApplySpeedDamping(
+		&game.Ship,
+		game.GameConfig.MaxShipSpeed,
+	)
 
 	// clamps all ship's speed, including if accelerated by gravity to 6
 	// it's just here to test gameplay
@@ -66,26 +87,26 @@ func (game *Game) updateCrashed() {
 	game.resetShipAfterCrash()
 
 	if game.Lives <= 0 {
-		game.GameState = StateLost
-		game.LevelMenuState = LevelMenuLose
+		game.GameState = shared.StateLost
+		game.LevelMenuState = shared.LevelMenuLose
 	} else {
-		game.GameState = StateAiming
-		game.LevelMenuState = LevelMenuCrash
+		game.GameState = shared.StateAiming
+		game.LevelMenuState = shared.LevelMenuCrash
 	}
 }
 
 // per-frame behavior while in won state
 func (game *Game) updateWon() {
-	game.LevelMenuState = LevelMenuWin
+	game.LevelMenuState = shared.LevelMenuWin
 }
 
 func (game *Game) updateLost() {
-	game.LevelMenuState = LevelMenuLose
+	game.LevelMenuState = shared.LevelMenuLose
 }
 
 // one-time transition
 func (game *Game) getWinResult() {
-	game.GameState = StateWon
+	game.GameState = shared.StateWon
 	game.collectStars()
-	game.LevelMenuState = LevelMenuWin
+	game.LevelMenuState = shared.LevelMenuWin
 }

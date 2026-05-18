@@ -1,106 +1,18 @@
-package main
+package game
 
 import (
 	"math"
 	"math/rand/v2"
 
+	"github.com/FBascou/rocket_game/entities"
+	"github.com/FBascou/rocket_game/shared"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-type Assets struct {
-	ShipImage    *ebiten.Image
-	PlanetImage  *ebiten.Image
-	MineralImage *ebiten.Image
-}
-
-type DebugVariable struct {
-	Name  string
-	Step  float64
-	Value *float64
-}
-
-type DebugIntVariable struct {
-	Name  string
-	Step  int
-	Value *int
-}
-
-type GameConfig struct {
-	// Drag line dot amount
-	DragLineSteps int
-	// Drag line dot space multiplier
-	DragPreviewStep float64
-	// Gravity Strength affects the direction drag preview
-	DragPreviewGravityStrength float64
-
-	// Ship's initial launch speed
-	LaunchPower    float64
-	MaxLaunchSpeed float64
-
-	// Ship's speed
-	ShipFriction float64
-	MaxShipSpeed float64
-
-	// Ship's magnet strength
-	MagnetRadius         float64
-	MagnetPull           float64
-	MagnetFollowStrength float64
-	MineralDamping       float64
-
-	// Planet gravity
-	GravityFalloff float64
-}
-
-type Level struct {
-	screenWidth  int
-	screenHeight int
-}
-
-type GameState int
-
-const (
-	StateAiming GameState = iota
-	StateFlying
-	StateCrashed
-	StateWon
-	StateLost
-)
-
-type Game struct {
-	Assets             Assets
-	Level              Level
-	LevelMenuState     LevelMenuState
-	GameState          GameState
-	GameConfig         GameConfig
-	Ship               Ship
-	InitialPlanets     []Planet
-	Planets            []Planet
-	LevelNumber        int
-	CollectedMinerals  int
-	CrashCount         int
-	Lives              int
-	Stars              int
-	Dragging           bool
-	DragStartX         int
-	DragStartY         int
-	DebugMode          bool
-	DebugSelectedIndex int
-}
-
 // Initializes ebiten.Image images for ship, planets, minerals, etc.
-func (game *Game) initializeAssets() {
+func (game *Game) InitializeAssets() {
 	game.Assets.ShipImage = loadImage("assets/ship.png")
-}
-
-// This should be called when:
-// starting the next/new level,
-// restarting entire game
-func (game *Game) initializeNewLevel() {
-	game.GameState = StateAiming
-	game.Ship = game.generateShip()
-	game.Planets = game.generatePlanets()
-	game.InitialPlanets = deepClonePlanets(game.Planets)
 }
 
 // This should be called when:
@@ -109,33 +21,33 @@ func (game *Game) initializeNewLevel() {
 // not regenerating planets,
 // restart the same level if player crashed less than 5 times
 func (game *Game) resetLevel() {
-	game.GameState = StateAiming
+	game.GameState = shared.StateAiming
 	game.Ship = game.generateShip()
 	game.Planets = deepClonePlanets(game.InitialPlanets)
 	game.CollectedMinerals = 0
 }
 
 func (game *Game) resetShipAfterCrash() {
-	game.GameState = StateAiming
+	game.GameState = shared.StateAiming
 	game.Ship = game.generateShip()
 }
 
-func (game *Game) generateShip() Ship {
-	return Ship{
-		X:               float64(dimensionWidth) / 2,
-		Y:               float64(dimensionHeight) - 50,
+func (game *Game) generateShip() entities.Ship {
+	return entities.Ship{
+		X:               float64(game.ScreenWidth) / 2,
+		Y:               float64(game.ScreenHeight) - 50,
 		Rotation:        0,
 		MagnetRadius:    game.GameConfig.MagnetRadius,
 		CollisionRadius: 6,
 	}
 }
 
-func (game *Game) generatePlanets() []Planet {
+func (game *Game) generatePlanets() []entities.Planet {
 	// min 1 planet, max 3 planets (not including destination panet)
 	numberOfPlanets := 1 + rand.IntN(3)
 
-	screenW := float64(dimensionWidth)
-	screenH := float64(dimensionHeight)
+	screenW := float64(game.ScreenWidth)
+	screenH := float64(game.ScreenHeight)
 
 	topMargin := 80.0
 	bottomMargin := 120.0
@@ -150,13 +62,13 @@ func (game *Game) generatePlanets() []Planet {
 	// static value that affects the horizontal distance between planets
 	xVariation := 60.0
 
-	planets := []Planet{}
+	planets := []entities.Planet{}
 
 	for i := 0; i < numberOfPlanets; i++ {
 		// min 2 minerals, max 4 minerals
 		numberOfMinerals := 2 + rand.IntN(3)
 
-		var planet Planet
+		var planet entities.Planet
 
 		// boolean that guarantees no overlap between planets
 		validPlanet := false
@@ -181,7 +93,7 @@ func (game *Game) generatePlanets() []Planet {
 			// y := bottomMargin + float64(i) * stepY
 			y := bottomMargin + float64(i+1)*stepY
 
-			planet = Planet{
+			planet = entities.Planet{
 				X: x,
 				Y: y,
 				// physical size
@@ -189,7 +101,8 @@ func (game *Game) generatePlanets() []Planet {
 				// gravity field size
 				GravityRadius: 80,
 				// pull force
-				GravityStrength: 1,
+				GravityStrength: 0.5,
+				BodyType:        entities.BodyDestination,
 			}
 
 			validPlanet = true
@@ -217,7 +130,7 @@ func (game *Game) generatePlanets() []Planet {
 		planets = append(planets, planet)
 	}
 
-	var destinationPlanet Planet
+	var destinationPlanet entities.Planet
 	validDestination := false
 
 	// if there's not enough space in the window, there could be an infinite loop
@@ -233,13 +146,14 @@ func (game *Game) generatePlanets() []Planet {
 		// gives space between planets and top edge
 		y := topMargin + 20
 
-		destinationPlanet = Planet{
+		destinationPlanet = entities.Planet{
 			X:               x,
 			Y:               y,
 			Size:            50,
 			GravityRadius:   140,
 			GravityStrength: 2.5,
 			IsDestination:   true,
+			BodyType:        entities.BodyDestination,
 		}
 
 		validDestination = true
@@ -261,8 +175,8 @@ func (game *Game) generatePlanets() []Planet {
 	return planets
 }
 
-func (game *Game) generateMinerals(planet Planet, count int) []Mineral {
-	minerals := []Mineral{}
+func (game *Game) generateMinerals(planet entities.Planet, count int) []entities.Mineral {
+	minerals := []entities.Mineral{}
 	minDistance := 15.0
 
 	for len(minerals) < count {
@@ -288,7 +202,7 @@ func (game *Game) generateMinerals(planet Planet, count int) []Mineral {
 		}
 
 		if valid {
-			minerals = append(minerals, Mineral{X: x, Y: y})
+			minerals = append(minerals, entities.Mineral{X: x, Y: y})
 		}
 	}
 
@@ -403,22 +317,22 @@ func (game *Game) updateMenu() {
 	// replay button
 	if isPointInsideRect(mx, my, 100, 380, 200, 40) {
 		game.resetLevel()
-		game.LevelMenuState = LevelMenuClosed
+		game.LevelMenuState = shared.LevelMenuClosed
 	}
 
 	// next level button or continue button (keep playing)
 	if isPointInsideRect(mx, my, 100, 440, 200, 40) {
 		// go next level
-		if game.LevelMenuState == LevelMenuWin {
-			game.initializeNewLevel()
-			game.LevelMenuState = LevelMenuClosed
+		if game.LevelMenuState == shared.LevelMenuWin {
+			game.nextLevel()
+			game.LevelMenuState = shared.LevelMenuClosed
 			return
 		}
 
 		// keep playing after crash/pause
-		if game.LevelMenuState == LevelMenuCrash ||
-			game.LevelMenuState == LevelMenuPause {
-			game.LevelMenuState = LevelMenuClosed
+		if game.LevelMenuState == shared.LevelMenuCrash ||
+			game.LevelMenuState == shared.LevelMenuPause {
+			game.LevelMenuState = shared.LevelMenuClosed
 			return
 		}
 	}
