@@ -1,11 +1,15 @@
 package entities
 
+import "github.com/hajimehoshi/ebiten/v2"
+
 type Ship struct {
 	X, Y            float64
 	VX, VY          float64
 	Rotation        float64
 	MagnetRadius    float64
 	CollisionRadius float64
+	SpriteKey       string
+	Sprite          *ebiten.Image
 }
 
 // Getter function

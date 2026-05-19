@@ -18,19 +18,31 @@ var Levels = []LevelConfig{
 			{
 				ID:              0,
 				BodyType:        entities.BodyPlanet,
-				X:               350,
-				Y:               420,
+				X:               500,
+				Y:               220,
 				Size:            30,
 				GravityRadius:   80,
 				GravityStrength: 0.5,
-				SpriteKey:       "planet_green_01",
+				SpriteKey:       "planet1",
 
 				AutoGenerateMinerals: true,
 				MineralCount:         3,
 			},
-
 			{
 				ID:              1,
+				BodyType:        entities.BodyPlanet,
+				X:               380,
+				Y:               320,
+				Size:            30,
+				GravityRadius:   80,
+				GravityStrength: 0.5,
+				SpriteKey:       "planet1",
+
+				AutoGenerateMinerals: true,
+				MineralCount:         3,
+			},
+			{
+				ID:              2,
 				BodyType:        entities.BodyDestination,
 				X:               420,
 				Y:               120,
@@ -38,7 +50,7 @@ var Levels = []LevelConfig{
 				GravityRadius:   140,
 				GravityStrength: 2.5,
 				IsDestination:   true,
-				SpriteKey:       "planet_blue_01",
+				SpriteKey:       "planet2",
 			},
 		},
 	},
@@ -46,7 +58,7 @@ var Levels = []LevelConfig{
 	{
 		ID:    1,
 		Name:  "Gravity Fork",
-		Lives: 4,
+		Lives: 5,
 
 		Ship: ShipConfig{
 			X:            400,

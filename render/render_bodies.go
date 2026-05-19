@@ -9,10 +9,10 @@ import (
 )
 
 var bodiesprites = []string{
-	"planet_green_01",
-	"planet_green_02",
-	"planet_blue_01",
-	"planet_red_01",
+	"planet1",
+	"planet2",
+	"planet3",
+	"planet4",
 }
 
 func GetUniqueBodySprite(used map[string]bool) string {
@@ -40,13 +40,34 @@ func GetUniqueBodySprite(used map[string]bool) string {
 }
 
 func drawBody(screen *ebiten.Image, body entities.Body) {
+
 	drawFilledCircle(
 		screen,
 		body.X,
 		body.Y,
-		body.Size,
-		color.White,
+		body.GravityRadius,
+		color.RGBA{0, 30, 30, 30},
 	)
+
+	if body.Sprite == nil {
+		return
+	}
+
+	options := &ebiten.DrawImageOptions{}
+
+	w, h := body.Sprite.Bounds().Dx(), body.Sprite.Bounds().Dy()
+
+	scaleX := (body.Size * 2) / float64(w)
+	scaleY := (body.Size * 2) / float64(h)
+
+	options.GeoM.Scale(scaleX, scaleY)
+
+	options.GeoM.Translate(
+		body.X-body.Size,
+		body.Y-body.Size,
+	)
+
+	screen.DrawImage(body.Sprite, options)
 }
 
 func drawBlackHole(screen *ebiten.Image, body entities.Body) {

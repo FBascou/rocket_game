@@ -7,8 +7,8 @@ import (
 )
 
 type Assets struct {
-	ShipImage    *ebiten.Image
-	BodyImage    *ebiten.Image
+	Ships        map[string]*ebiten.Image
+	Bodies       map[string]*ebiten.Image
 	MineralImage *ebiten.Image
 }
 

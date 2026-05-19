@@ -12,7 +12,14 @@ import (
 
 // Initializes ebiten.Image images for ship, bodies, minerals, etc.
 func (game *Game) InitializeAssets() {
-	game.Assets.ShipImage = loadImage("assets/ships/ship.png")
+	game.Assets.Ships = map[string]*ebiten.Image{
+		"ship": loadImage("assets/ships/ship.png"),
+	}
+
+	game.Assets.Bodies = map[string]*ebiten.Image{
+		"planet1": loadImage("assets/planets/planet1.png"),
+		"planet2": loadImage("assets/planets/planet2.png"),
+	}
 }
 
 // This should be called when:

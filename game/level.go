@@ -20,43 +20,44 @@ func (game *Game) LoadLevel(index int) {
 	game.Bodies = []entities.Body{}
 	usedSprites := map[string]bool{}
 
-	for _, p := range level.Bodies {
+	for _, b := range level.Bodies {
 
-		planet := entities.Body{
-			X:               p.X,
-			Y:               p.Y,
-			BodyType:        p.BodyType,
-			Size:            p.Size,
-			GravityRadius:   p.GravityRadius,
-			GravityStrength: p.GravityStrength,
-			IsDestination:   p.IsDestination,
-			SpriteKey:       p.SpriteKey,
+		body := entities.Body{
+			X:               b.X,
+			Y:               b.Y,
+			BodyType:        b.BodyType,
+			Size:            b.Size,
+			GravityRadius:   b.GravityRadius,
+			GravityStrength: b.GravityStrength,
+			IsDestination:   b.IsDestination,
+			SpriteKey:       b.SpriteKey,
+			Sprite:          game.Assets.Bodies[b.SpriteKey],
 		}
 
-		if p.AutoGenerateMinerals {
-			planet.Minerals = game.generateMinerals(
-				planet,
-				p.MineralCount,
+		if b.AutoGenerateMinerals {
+			body.Minerals = game.generateMinerals(
+				body,
+				b.MineralCount,
 			)
 		} else {
-			for _, m := range p.Minerals {
-				planet.Minerals = append(
-					planet.Minerals,
+			for _, mineral := range b.Minerals {
+				body.Minerals = append(
+					body.Minerals,
 					entities.Mineral{
-						X: m.X,
-						Y: m.Y,
+						X: mineral.X,
+						Y: mineral.Y,
 					},
 				)
 			}
 		}
 
-		if p.SpriteKey == "" {
-			p.SpriteKey = render.GetUniqueBodySprite(usedSprites)
+		if b.SpriteKey == "" {
+			b.SpriteKey = render.GetUniqueBodySprite(usedSprites)
 		}
 
-		usedSprites[p.SpriteKey] = true
+		usedSprites[b.SpriteKey] = true
 
-		game.Bodies = append(game.Bodies, planet)
+		game.Bodies = append(game.Bodies, body)
 	}
 
 	game.Ship = entities.Ship{
@@ -64,6 +65,8 @@ func (game *Game) LoadLevel(index int) {
 		Y:               level.Ship.Y,
 		MagnetRadius:    level.Ship.MagnetRadius,
 		CollisionRadius: 6,
+		SpriteKey:       "ship",
+		Sprite:          game.Assets.Ships["ship"],
 	}
 
 	game.InitialBodies = deepCloneBodies(game.Bodies)
