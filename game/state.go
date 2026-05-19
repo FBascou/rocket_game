@@ -41,7 +41,7 @@ func (game *Game) updateAiming() {
 func (game *Game) updateFlying() {
 	hasShipCrashed := physics.ApplyGravity(
 		&game.Ship,
-		game.Planets,
+		game.Bodies,
 		game.GameConfig.GravityFalloff,
 		game.GameConfig.DragPreviewGravityStrength,
 	)

@@ -8,18 +8,18 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-var PlanetSprites = []string{
+var bodiesprites = []string{
 	"planet_green_01",
 	"planet_green_02",
 	"planet_blue_01",
 	"planet_red_01",
 }
 
-func GetUniquePlanetSprite(used map[string]bool) string {
+func GetUniqueBodySprite(used map[string]bool) string {
 
 	available := []string{}
 
-	for _, sprite := range PlanetSprites {
+	for _, sprite := range bodiesprites {
 		if !used[sprite] {
 			available = append(available, sprite)
 		}
@@ -30,7 +30,7 @@ func GetUniquePlanetSprite(used map[string]bool) string {
 			delete(used, k)
 		}
 
-		available = PlanetSprites
+		available = bodiesprites
 	}
 
 	selected := available[rand.IntN(len(available))]
@@ -39,66 +39,66 @@ func GetUniquePlanetSprite(used map[string]bool) string {
 	return selected
 }
 
-func drawPlanet(screen *ebiten.Image, planet entities.Planet) {
+func drawBody(screen *ebiten.Image, body entities.Body) {
 	drawFilledCircle(
 		screen,
-		planet.X,
-		planet.Y,
-		planet.Size,
+		body.X,
+		body.Y,
+		body.Size,
 		color.White,
 	)
 }
 
-func drawBlackHole(screen *ebiten.Image, planet entities.Planet) {
+func drawBlackHole(screen *ebiten.Image, body entities.Body) {
 	drawFilledCircle(
 		screen,
-		planet.X,
-		planet.Y,
-		planet.Size,
+		body.X,
+		body.Y,
+		body.Size,
 		color.White,
 	)
 }
 
-func drawAsteroid(screen *ebiten.Image, planet entities.Planet) {
+func drawAsteroid(screen *ebiten.Image, body entities.Body) {
 	drawFilledCircle(
 		screen,
-		planet.X,
-		planet.Y,
-		planet.Size,
+		body.X,
+		body.Y,
+		body.Size,
 		color.White,
 	)
 }
 
-func drawComet(screen *ebiten.Image, planet entities.Planet) {
+func drawComet(screen *ebiten.Image, body entities.Body) {
 	drawFilledCircle(
 		screen,
-		planet.X,
-		planet.Y,
-		planet.Size,
+		body.X,
+		body.Y,
+		body.Size,
 		color.White,
 	)
 }
 
 // drawWormHole
 
-// TODO: Bodies should not be inside of Planets
-func DrawBodies(screen *ebiten.Image, planets []entities.Planet) {
-	for _, planet := range planets {
+// TODO: Bodies should not be inside of bodies
+func DrawBodies(screen *ebiten.Image, bodies []entities.Body) {
+	for _, body := range bodies {
 
-		switch planet.BodyType {
+		switch body.BodyType {
 		case entities.BodyPlanet:
-			drawPlanet(screen, planet) //TODO: Create these funcs drawPlanet
+			drawBody(screen, body) //TODO: Create these funcs drawBody
 
 		case entities.BodyBlackHole:
-			drawBlackHole(screen, planet) //TODO: Create these funcs drawBlackHole
+			drawBlackHole(screen, body) //TODO: Create these funcs drawBlackHole
 
 		case entities.BodyAsteroid:
-			drawAsteroid(screen, planet) //TODO: Create these funcs drawAsteroid
+			drawAsteroid(screen, body) //TODO: Create these funcs drawAsteroid
 
 		case entities.BodyComet:
-			drawComet(screen, planet) //TODO: Create these funcs drawComet
+			drawComet(screen, body) //TODO: Create these funcs drawComet
 		case entities.BodyDestination:
-			drawPlanet(screen, planet)
+			drawBody(screen, body)
 		}
 	}
 }

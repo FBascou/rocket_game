@@ -12,7 +12,7 @@ import (
 func DrawDragIndicator(
 	screen *ebiten.Image,
 	ship entities.Ship,
-	planets []entities.Planet,
+	bodies []entities.Body,
 	gameConfig DragIndicatorConfig,
 	dragStartX int,
 	dragStartY int,
@@ -42,10 +42,10 @@ func DrawDragIndicator(
 	// simple dotted line (step-based) when dragging the ship
 	for i := 0; i < steps; i++ {
 		// fake gravity preview
-		for _, planet := range planets {
+		for _, body := range bodies {
 
-			dx := planet.X - px
-			dy := planet.Y - py
+			dx := body.X - px
+			dy := body.Y - py
 
 			distance := math.Sqrt(dx*dx + dy*dy)
 
@@ -54,15 +54,15 @@ func DrawDragIndicator(
 			}
 
 			// outside gravity field
-			if distance > planet.GravityRadius {
+			if distance > body.GravityRadius {
 				continue
 			}
 
-			// 0.12 tuning constant means how strongly should the preview line bend visually to the planet gravity (visual prediction)
-			// force := planet.GravityStrength / (distance * distance + gameConfig.GravityFalloff)
+			// 0.12 tuning constant means how strongly should the preview line bend visually to the body gravity (visual prediction)
+			// force := body.GravityStrength / (distance * distance + gameConfig.GravityFalloff)
 			falloff := distance + gameConfig.GravityFalloff
-			// force := planet.GravityStrength / falloff
-			force := (planet.GravityStrength * gameConfig.DragPreviewGravityStrength) / falloff
+			// force := body.GravityStrength / falloff
+			force := (body.GravityStrength * gameConfig.DragPreviewGravityStrength) / falloff
 
 			nx := dx / distance
 			ny := dy / distance

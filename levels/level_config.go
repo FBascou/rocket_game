@@ -7,7 +7,7 @@ type MineralConfig struct {
 	Y float64
 }
 
-type PlanetConfig struct {
+type BodyConfig struct {
 	ID              int
 	BodyType        entities.BodyType
 	X               float64
@@ -33,9 +33,9 @@ type ShipConfig struct {
 }
 
 type LevelConfig struct {
-	ID      int
-	Name    string
-	Lives   int
-	Planets []PlanetConfig
-	Ship    ShipConfig
+	ID     int
+	Name   string
+	Lives  int
+	Bodies []BodyConfig
+	Ship   ShipConfig
 }

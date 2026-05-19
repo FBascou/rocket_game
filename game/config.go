@@ -8,7 +8,7 @@ import (
 
 type Assets struct {
 	ShipImage    *ebiten.Image
-	PlanetImage  *ebiten.Image
+	BodyImage    *ebiten.Image
 	MineralImage *ebiten.Image
 }
 
@@ -62,8 +62,8 @@ type Game struct {
 	GameState          shared.GameState
 	GameConfig         GameConfig
 	Ship               entities.Ship
-	InitialPlanets     []entities.Planet
-	Planets            []entities.Planet
+	InitialBodies      []entities.Body
+	Bodies             []entities.Body
 	LevelNumber        int
 	CollectedMinerals  int
 	CrashCount         int

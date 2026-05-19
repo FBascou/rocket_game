@@ -4,7 +4,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Planet struct {
+type Body struct {
 	X, Y float64
 	// Physical size
 	Size float64
@@ -21,11 +21,11 @@ type Planet struct {
 }
 
 // Getter function
-func (planet Planet) GetX() float64 {
-	return planet.X
+func (body Body) GetX() float64 {
+	return body.X
 }
 
 // Getter function
-func (planet Planet) GetY() float64 {
-	return planet.Y
+func (body Body) GetY() float64 {
+	return body.Y
 }

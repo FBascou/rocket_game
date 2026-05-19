@@ -17,12 +17,12 @@ func (game *Game) LoadLevel(index int) {
 	game.LevelNumber = index
 	game.Lives = level.Lives
 
-	game.Planets = []entities.Planet{}
+	game.Bodies = []entities.Body{}
 	usedSprites := map[string]bool{}
 
-	for _, p := range level.Planets {
+	for _, p := range level.Bodies {
 
-		planet := entities.Planet{
+		planet := entities.Body{
 			X:               p.X,
 			Y:               p.Y,
 			BodyType:        p.BodyType,
@@ -51,12 +51,12 @@ func (game *Game) LoadLevel(index int) {
 		}
 
 		if p.SpriteKey == "" {
-			p.SpriteKey = render.GetUniquePlanetSprite(usedSprites)
+			p.SpriteKey = render.GetUniqueBodySprite(usedSprites)
 		}
 
 		usedSprites[p.SpriteKey] = true
 
-		game.Planets = append(game.Planets, planet)
+		game.Bodies = append(game.Bodies, planet)
 	}
 
 	game.Ship = entities.Ship{
@@ -66,7 +66,7 @@ func (game *Game) LoadLevel(index int) {
 		CollisionRadius: 6,
 	}
 
-	game.InitialPlanets = deepClonePlanets(game.Planets)
+	game.InitialBodies = deepCloneBodies(game.Bodies)
 
 	game.GameState = shared.StateAiming
 }

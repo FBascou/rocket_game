@@ -14,7 +14,7 @@ var Levels = []LevelConfig{
 			MagnetRadius: 75,
 		},
 
-		Planets: []PlanetConfig{
+		Bodies: []BodyConfig{
 			{
 				ID:              0,
 				BodyType:        entities.BodyPlanet,
@@ -54,7 +54,7 @@ var Levels = []LevelConfig{
 			MagnetRadius: 75,
 		},
 
-		Planets: []PlanetConfig{
+		Bodies: []BodyConfig{
 			// more planets
 		},
 	},

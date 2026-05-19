@@ -6,42 +6,42 @@ import (
 	"github.com/FBascou/rocket_game/entities"
 )
 
-// Returns boolean if whether ship crashed into a non-destination planet by being pulled by gravity
+// Returns boolean if whether ship crashed into a non-destination body by being pulled by gravity
 func ApplyGravity(
 	ship *entities.Ship,
-	planets []entities.Planet,
+	bodies []entities.Body,
 	gravityFalloff float64,
 	dragPreviewGravityStrength float64,
 ) bool {
-	for _, planet := range planets {
-		dx := planet.X - ship.X
-		dy := planet.Y - ship.Y
+	for _, body := range bodies {
+		dx := body.X - ship.X
+		dy := body.Y - ship.Y
 
 		distance := math.Sqrt(dx*dx + dy*dy)
 
-		// collision check + adding CollisionRadius to Ship or else the collision counts the center of the ship with the planet
-		if distance < planet.Size+ship.CollisionRadius {
-			if !planet.IsDestination {
+		// collision check + adding CollisionRadius to Ship or else the collision counts the center of the ship with the body
+		if distance < body.Size+ship.CollisionRadius {
+			if !body.IsDestination {
 				return true
 			}
 		}
 
 		if distance < 1 {
-			// continue skips only one interation and moves on to the next planet in the loop
+			// continue skips only one interation and moves on to the next body in the loop
 			continue
 		}
 
-		// 50 is a placeholder to not make it accelerate insanely fast when the ship gets closer to planet
+		// 50 is a placeholder to not make it accelerate insanely fast when the ship gets closer to body
 		// outside gravity field
-		if distance > planet.GravityRadius {
+		if distance > body.GravityRadius {
 			continue
 		}
 
-		// force := planet.GravityStrength / (distance*distance + game.GameConfig.GravityFalloff)
+		// force := body.GravityStrength / (distance*distance + game.GameConfig.GravityFalloff)
 
 		falloff := distance + gravityFalloff
-		// force := planet.GravityStrength / falloff
-		force := (planet.GravityStrength * dragPreviewGravityStrength) / falloff
+		// force := body.GravityStrength / falloff
+		force := (body.GravityStrength * dragPreviewGravityStrength) / falloff
 
 		nx := dx / distance
 		ny := dy / distance

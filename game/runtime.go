@@ -62,9 +62,8 @@ func (game *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.Black)
 
 	render.DrawShip(screen, game.Ship)
-	// game.Planets should be changed to game.Bodies
-	render.DrawBodies(screen, game.Planets)
-	render.DrawMinerals(screen, game.Planets)
+	render.DrawBodies(screen, game.Bodies)
+	render.DrawMinerals(screen, game.Bodies)
 
 	// Draw GameConfig debug
 	game.drawDebugTuner(screen)
@@ -74,7 +73,7 @@ func (game *Game) Draw(screen *ebiten.Image) {
 		render.DrawDragIndicator(
 			screen,
 			game.Ship,
-			game.Planets,
+			game.Bodies,
 			game.GetDragIndicatorConfig(),
 			game.DragStartX,
 			game.DragStartY,

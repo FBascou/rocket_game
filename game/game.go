@@ -10,20 +10,20 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-// Initializes ebiten.Image images for ship, planets, minerals, etc.
+// Initializes ebiten.Image images for ship, bodies, minerals, etc.
 func (game *Game) InitializeAssets() {
-	game.Assets.ShipImage = loadImage("assets/ship.png")
+	game.Assets.ShipImage = loadImage("assets/ships/ship.png")
 }
 
 // This should be called when:
 // resetting ship only,
 // restore minerals to original state,
-// not regenerating planets,
+// not regenerating bodies,
 // restart the same level if player crashed less than 5 times
 func (game *Game) resetLevel() {
 	game.GameState = shared.StateAiming
 	game.Ship = game.generateShip()
-	game.Planets = deepClonePlanets(game.InitialPlanets)
+	game.Bodies = deepCloneBodies(game.InitialBodies)
 	game.CollectedMinerals = 0
 }
 
@@ -42,9 +42,9 @@ func (game *Game) generateShip() entities.Ship {
 	}
 }
 
-func (game *Game) generatePlanets() []entities.Planet {
-	// min 1 planet, max 3 planets (not including destination panet)
-	numberOfPlanets := 1 + rand.IntN(3)
+func (game *Game) generateBodies() []entities.Body {
+	// min 1 body, max 3 bodies (not including destination panet)
+	numberOfBodies := 1 + rand.IntN(3)
 
 	screenW := float64(game.ScreenWidth)
 	screenH := float64(game.ScreenHeight)
@@ -53,47 +53,47 @@ func (game *Game) generatePlanets() []entities.Planet {
 	bottomMargin := 120.0
 
 	usableHeight := screenH - topMargin - bottomMargin
-	// value that affexts the vertical distance between planets
+	// value that affexts the vertical distance between bodies
 	// add a verticalSpacingMultiplier := 1.4
-	// stepY := (usableHeight / float64(numberOfPlanets + 1)) * verticalSpacingMultiplier
-	stepY := usableHeight / float64(numberOfPlanets+1)
+	// stepY := (usableHeight / float64(numberOfBodies + 1)) * verticalSpacingMultiplier
+	stepY := usableHeight / float64(numberOfBodies+1)
 
 	centerX := screenW / 2
-	// static value that affects the horizontal distance between planets
+	// static value that affects the horizontal distance between bodies
 	xVariation := 60.0
 
-	planets := []entities.Planet{}
+	bodies := []entities.Body{}
 
-	for i := 0; i < numberOfPlanets; i++ {
+	for i := 0; i < numberOfBodies; i++ {
 		// min 2 minerals, max 4 minerals
 		numberOfMinerals := 2 + rand.IntN(3)
 
-		var planet entities.Planet
+		var body entities.Body
 
-		// boolean that guarantees no overlap between planets
-		validPlanet := false
+		// boolean that guarantees no overlap between bodies
+		validBody := false
 
-		// if true, create a planet on the calculated position
-		for !validPlanet {
-			// a bit of planet x randomness with a left-path (more zig-zag)
+		// if true, create a body on the calculated position
+		for !validBody {
+			// a bit of body x randomness with a left-path (more zig-zag)
 			// direction alternates left/right (offset)
 			direction := 1.0
 			if i%2 == 0 {
 				direction = -1.0
 			}
-			// planet x position = center + left/right offset
+			// body x position = center + left/right offset
 			// 20 + rand.Float64() (0 to 1) * 40 = random number between 20 and 60 px
 			// currently creates a 20-60px left/right offset
 			x := centerX + direction*(20+rand.Float64()*40)
 
-			// a bit of planet x randomness (more linear than above)
+			// a bit of body x randomness (more linear than above)
 			// x := centerX + (rand.Float64() * 2 - 1) * xVariation
 
-			// controlled planet y variation
+			// controlled body y variation
 			// y := bottomMargin + float64(i) * stepY
 			y := bottomMargin + float64(i+1)*stepY
 
-			planet = entities.Planet{
+			body = entities.Body{
 				X: x,
 				Y: y,
 				// physical size
@@ -105,32 +105,32 @@ func (game *Game) generatePlanets() []entities.Planet {
 				BodyType:        entities.BodyDestination,
 			}
 
-			validPlanet = true
+			validBody = true
 
-			// collision check: prevent overlap, planets don't touch each other
-			for _, existing := range planets {
-				// horizontal difference between 2 planets
-				dx := existing.X - planet.X
-				// vertical difference between 2 planets
-				dy := existing.Y - planet.Y
-				// distance between 2 planets (vector between two objects)
+			// collision check: prevent overlap, bodies don't touch each other
+			for _, existing := range bodies {
+				// horizontal difference between 2 bodies
+				dx := existing.X - body.X
+				// vertical difference between 2 bodies
+				dy := existing.Y - body.Y
+				// distance between 2 bodies (vector between two objects)
 				dist := math.Sqrt(dx*dx + dy*dy)
 
-				// adding planet padding between each other
-				// are the circles/planets touching (+ padding)
-				// this controls how close planets are allowed to spawn
-				if dist < existing.Size+planet.Size+30 {
-					validPlanet = false
+				// adding body padding between each other
+				// are the circles/bodies touching (+ padding)
+				// this controls how close bodies are allowed to spawn
+				if dist < existing.Size+body.Size+30 {
+					validBody = false
 					break
 				}
 			}
 		}
 
-		planet.Minerals = game.generateMinerals(planet, numberOfMinerals)
-		planets = append(planets, planet)
+		body.Minerals = game.generateMinerals(body, numberOfMinerals)
+		bodies = append(bodies, body)
 	}
 
-	var destinationPlanet entities.Planet
+	var destinationPlanet entities.Body
 	validDestination := false
 
 	// if there's not enough space in the window, there could be an infinite loop
@@ -143,10 +143,10 @@ func (game *Game) generatePlanets() []entities.Planet {
 		// centers destination planet with horizontal skew
 		x := centerX + (rand.Float64()*2-1)*xVariation
 
-		// gives space between planets and top edge
+		// gives space between bodies and top edge
 		y := topMargin + 20
 
-		destinationPlanet = entities.Planet{
+		destinationPlanet = entities.Body{
 			X:               x,
 			Y:               y,
 			Size:            50,
@@ -158,7 +158,7 @@ func (game *Game) generatePlanets() []entities.Planet {
 
 		validDestination = true
 
-		for _, existing := range planets {
+		for _, existing := range bodies {
 			dx := existing.X - destinationPlanet.X
 			dy := existing.Y - destinationPlanet.Y
 			dist := math.Sqrt(dx*dx + dy*dy)
@@ -170,23 +170,23 @@ func (game *Game) generatePlanets() []entities.Planet {
 		}
 	}
 
-	planets = append(planets, destinationPlanet)
+	bodies = append(bodies, destinationPlanet)
 
-	return planets
+	return bodies
 }
 
-func (game *Game) generateMinerals(planet entities.Planet, count int) []entities.Mineral {
+func (game *Game) generateMinerals(body entities.Body, count int) []entities.Mineral {
 	minerals := []entities.Mineral{}
 	minDistance := 15.0
 
 	for len(minerals) < count {
 		angle := rand.Float64() * 2 * math.Pi
 		// uniform distribution of minerals across the circle
-		// minerals distribute evenly over the whole planet area
-		radius := math.Sqrt(rand.Float64()) * planet.Size
+		// minerals distribute evenly over the whole body area
+		radius := math.Sqrt(rand.Float64()) * body.Size
 
-		x := planet.X + radius*math.Cos(angle)
-		y := planet.Y + radius*math.Sin(angle)
+		x := body.X + radius*math.Cos(angle)
+		y := body.Y + radius*math.Sin(angle)
 
 		valid := true
 
@@ -210,11 +210,11 @@ func (game *Game) generateMinerals(planet entities.Planet, count int) []entities
 }
 
 func (game *Game) collectMinerals() {
-	for pi := range game.Planets {
-		planet := &game.Planets[pi]
+	for pi := range game.Bodies {
+		body := &game.Bodies[pi]
 
-		for mi := range planet.Minerals {
-			mineral := &planet.Minerals[mi]
+		for mi := range body.Minerals {
+			mineral := &body.Minerals[mi]
 
 			if mineral.Collected {
 				continue
@@ -290,7 +290,7 @@ func (game *Game) checkWin() {
 }
 
 func (game *Game) collectStars() {
-	totalMinerals := getTotalMineralsInLevel(game.Planets)
+	totalMinerals := getTotalMineralsInLevel(game.Bodies)
 	allMineralsCollected := game.CollectedMinerals == totalMinerals
 	is3stars := allMineralsCollected
 	is2stars := game.CrashCount == 0

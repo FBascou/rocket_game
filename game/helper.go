@@ -17,8 +17,9 @@ type Positionable interface {
 }
 
 // Returns the destination planet (last in the slice)
-func (game *Game) getDestinationPlanet() *entities.Planet {
-	return &game.Planets[len(game.Planets)-1]
+func (game *Game) getDestinationPlanet() *entities.Body {
+	// TODO: add if statment if body is planet and isDestination
+	return &game.Bodies[len(game.Bodies)-1]
 }
 
 func loadImage(path string) *ebiten.Image {
@@ -39,25 +40,25 @@ func loadImage(path string) *ebiten.Image {
 	return ebiten.NewImageFromImage(img)
 }
 
-// Get the count of all minerals from all the planets in a level
-func getTotalMineralsInLevel(planets []entities.Planet) int {
+// Get the count of all minerals from all the bodies in a level
+func getTotalMineralsInLevel(bodies []entities.Body) int {
 	minerals := 0
-	for index := 0; index < len(planets); index++ {
-		minerals += len(planets[index].Minerals)
+	for index := 0; index < len(bodies); index++ {
+		minerals += len(bodies[index].Minerals)
 	}
 	return minerals
 }
 
-// Deep cloning planets and minerals for level restart
+// Deep cloning bodies and minerals for level restart
 // Should be used for replaying whole level and restarting entire game
-func deepClonePlanets(planets []entities.Planet) []entities.Planet {
-	cloned := make([]entities.Planet, len(planets))
+func deepCloneBodies(bodies []entities.Body) []entities.Body {
+	cloned := make([]entities.Body, len(bodies))
 
-	for index, planet := range planets {
-		cloned[index] = planet
+	for index, body := range bodies {
+		cloned[index] = body
 
-		clonedMinerals := make([]entities.Mineral, len(planet.Minerals))
-		copy(clonedMinerals, planet.Minerals)
+		clonedMinerals := make([]entities.Mineral, len(body.Minerals))
+		copy(clonedMinerals, body.Minerals)
 
 		cloned[index].Minerals = clonedMinerals
 	}
