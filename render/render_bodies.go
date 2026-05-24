@@ -4,7 +4,7 @@ import (
 	"image/color"
 	"math/rand/v2"
 
-	"github.com/FBascou/rocket_game/entities"
+	"github.com/FBascou/rocket_game/objects"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -39,12 +39,12 @@ func GetUniqueBodySprite(used map[string]bool) string {
 	return selected
 }
 
-func drawBody(screen *ebiten.Image, body entities.Body) {
+func drawBody(screen *ebiten.Image, body objects.Body) {
 
 	drawFilledCircle(
 		screen,
-		body.X,
-		body.Y,
+		body.Position.X,
+		body.Position.Y,
 		body.GravityRadius,
 		color.RGBA{0, 30, 30, 30},
 	)
@@ -63,38 +63,38 @@ func drawBody(screen *ebiten.Image, body entities.Body) {
 	options.GeoM.Scale(scaleX, scaleY)
 
 	options.GeoM.Translate(
-		body.X-body.Size,
-		body.Y-body.Size,
+		body.Position.X-body.Size,
+		body.Position.Y-body.Size,
 	)
 
 	screen.DrawImage(body.Sprite, options)
 }
 
-func drawBlackHole(screen *ebiten.Image, body entities.Body) {
+func drawBlackHole(screen *ebiten.Image, body objects.Body) {
 	drawFilledCircle(
 		screen,
-		body.X,
-		body.Y,
+		body.Position.X,
+		body.Position.Y,
 		body.Size,
 		color.White,
 	)
 }
 
-func drawAsteroid(screen *ebiten.Image, body entities.Body) {
+func drawAsteroid(screen *ebiten.Image, body objects.Body) {
 	drawFilledCircle(
 		screen,
-		body.X,
-		body.Y,
+		body.Position.X,
+		body.Position.Y,
 		body.Size,
 		color.White,
 	)
 }
 
-func drawComet(screen *ebiten.Image, body entities.Body) {
+func drawComet(screen *ebiten.Image, body objects.Body) {
 	drawFilledCircle(
 		screen,
-		body.X,
-		body.Y,
+		body.Position.X,
+		body.Position.Y,
 		body.Size,
 		color.White,
 	)
@@ -103,22 +103,22 @@ func drawComet(screen *ebiten.Image, body entities.Body) {
 // drawWormHole
 
 // TODO: Bodies should not be inside of bodies
-func DrawBodies(screen *ebiten.Image, bodies []entities.Body) {
+func DrawBodies(screen *ebiten.Image, bodies []objects.Body) {
 	for _, body := range bodies {
 
 		switch body.BodyType {
-		case entities.BodyPlanet:
+		case objects.BodyPlanet:
 			drawBody(screen, body) //TODO: Create these funcs drawBody
 
-		case entities.BodyBlackHole:
+		case objects.BodyBlackHole:
 			drawBlackHole(screen, body) //TODO: Create these funcs drawBlackHole
 
-		case entities.BodyAsteroid:
+		case objects.BodyAsteroid:
 			drawAsteroid(screen, body) //TODO: Create these funcs drawAsteroid
 
-		case entities.BodyComet:
+		case objects.BodyComet:
 			drawComet(screen, body) //TODO: Create these funcs drawComet
-		case entities.BodyDestination:
+		case objects.BodyDestination:
 			drawBody(screen, body)
 		}
 	}

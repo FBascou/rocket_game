@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
+	"github.com/FBascou/rocket_game/math2d"
 	"github.com/FBascou/rocket_game/physics"
 	"github.com/FBascou/rocket_game/shared"
 )
@@ -31,7 +32,8 @@ func (game *Game) updateAiming() {
 		vy := dy * game.GameConfig.LaunchPower
 
 		// limit ship's initial speed/launch energy (6 is a placeholder) if dragged too hard
-		game.Ship.VX, game.Ship.VY = physics.ClampVelocity(vx, vy, game.GameConfig.MaxLaunchSpeed)
+		// game.Ship.Velocity.X, game.Ship.Velocity.Y
+		game.Ship.Velocity = math2d.ClampMagnitude(math2d.Vector2{X: vx, Y: vy}, game.GameConfig.MaxLaunchSpeed)
 
 		// now ship can move and physics are applied
 		game.GameState = shared.StateFlying
@@ -43,7 +45,7 @@ func (game *Game) updateFlying() {
 		&game.Ship,
 		game.Bodies,
 		game.GameConfig.GravityFalloff,
-		game.GameConfig.DragPreviewGravityStrength,
+		game.GameConfig.GravityMultiplier,
 	)
 
 	if hasShipCrashed {
@@ -52,31 +54,31 @@ func (game *Game) updateFlying() {
 	}
 
 	physics.ApplyFriction(
-		&game.Ship,
+		&game.Ship.Velocity,
 		game.GameConfig.ShipFriction,
 	)
 
 	physics.ApplySpeedDamping(
-		&game.Ship,
+		&game.Ship.Velocity,
 		game.GameConfig.MaxShipSpeed,
 	)
 
 	// clamps all ship's speed, including if accelerated by gravity to 6
 	// it's just here to test gameplay
-	// game.Ship.VX, game.Ship.VY = clampVelocity(game.Ship.VX, game.Ship.VY, 6)
+	// game.Ship.Velocity.X, game.Ship.Velocity.Y = clampVelocity(game.Ship.Velocity.X, game.Ship.Velocity.Y, 6)
 
 	game.collectMinerals()
 	game.checkWin()
 
 	// ship's movement
-	game.Ship.X += game.Ship.VX
-	game.Ship.Y += game.Ship.VY
+	game.Ship.Position.X += game.Ship.Velocity.X
+	game.Ship.Position.Y += game.Ship.Velocity.Y
 
 	// ship's speed (vector magnitude)
-	speed := math.Sqrt(game.Ship.VX*game.Ship.VX + game.Ship.VY*game.Ship.VY)
+	speed := math.Sqrt(game.Ship.Velocity.X*game.Ship.Velocity.X + game.Ship.Velocity.Y*game.Ship.Velocity.Y)
 
 	if speed > 0.1 {
-		game.Ship.Rotation = math.Atan2(game.Ship.VY, game.Ship.VX) + math.Pi/2
+		game.Ship.Rotation = math.Atan2(game.Ship.Velocity.Y, game.Ship.Velocity.X) + math.Pi/2
 	}
 }
 

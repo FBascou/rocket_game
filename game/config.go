@@ -1,7 +1,7 @@
 package game
 
 import (
-	"github.com/FBascou/rocket_game/entities"
+	"github.com/FBascou/rocket_game/objects"
 	"github.com/FBascou/rocket_game/shared"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -30,7 +30,7 @@ type GameConfig struct {
 	// Drag line dot space multiplier
 	DragPreviewStep float64
 	// Gravity Strength affects the direction drag preview
-	DragPreviewGravityStrength float64
+	GravityMultiplier float64
 
 	// Ship's initial launch speed
 	LaunchPower    float64
@@ -39,6 +39,8 @@ type GameConfig struct {
 	// Ship's speed
 	ShipFriction float64
 	MaxShipSpeed float64
+
+	ShipCollisionRadius float64
 
 	// Ship's magnet strength
 	MagnetRadius         float64
@@ -61,9 +63,9 @@ type Game struct {
 	LevelMenuState     shared.LevelMenuState
 	GameState          shared.GameState
 	GameConfig         GameConfig
-	Ship               entities.Ship
-	InitialBodies      []entities.Body
-	Bodies             []entities.Body
+	Ship               objects.Ship
+	InitialBodies      []objects.Body
+	Bodies             []objects.Body
 	LevelNumber        int
 	CollectedMinerals  int
 	CrashCount         int

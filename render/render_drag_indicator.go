@@ -4,15 +4,15 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/FBascou/rocket_game/entities"
-	"github.com/FBascou/rocket_game/physics"
+	"github.com/FBascou/rocket_game/math2d"
+	"github.com/FBascou/rocket_game/objects"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 func DrawDragIndicator(
 	screen *ebiten.Image,
-	ship entities.Ship,
-	bodies []entities.Body,
+	ship objects.Ship,
+	bodies []objects.Body,
 	gameConfig DragIndicatorConfig,
 	dragStartX int,
 	dragStartY int,
@@ -23,19 +23,19 @@ func DrawDragIndicator(
 	dx := float64(dragStartX - cursorX)
 	dy := float64(dragStartY - cursorY)
 
-	vx := dx * gameConfig.LaunchPower
-	vy := dy * gameConfig.LaunchPower
-
 	// use same clamp as actual launch
-	vx, vy = physics.ClampVelocity(
-		vx,
-		vy,
+	velocity := math2d.ClampMagnitude(
+		math2d.Vector2{
+			X: dx * gameConfig.LaunchPower,
+			Y: dy * gameConfig.LaunchPower},
 		gameConfig.MaxLaunchSpeed,
 	)
 
+	ship.Velocity = velocity
+
 	// predicted x/y position (simulates a fake future path)
-	px := ship.X
-	py := ship.Y
+	px := ship.Position.X
+	py := ship.Position.Y
 
 	steps := gameConfig.DragLineSteps
 
@@ -44,8 +44,8 @@ func DrawDragIndicator(
 		// fake gravity preview
 		for _, body := range bodies {
 
-			dx := body.X - px
-			dy := body.Y - py
+			dx := body.Position.X - px
+			dy := body.Position.Y - py
 
 			distance := math.Sqrt(dx*dx + dy*dy)
 
@@ -62,18 +62,18 @@ func DrawDragIndicator(
 			// force := body.GravityStrength / (distance * distance + gameConfig.GravityFalloff)
 			falloff := distance + gameConfig.GravityFalloff
 			// force := body.GravityStrength / falloff
-			force := (body.GravityStrength * gameConfig.DragPreviewGravityStrength) / falloff
+			force := (body.GravityStrength * gameConfig.GravityMultiplier) / falloff
 
 			nx := dx / distance
 			ny := dy / distance
 
-			vx += nx * force
-			vy += ny * force
+			ship.Velocity.X += nx * force
+			ship.Velocity.Y += ny * force
 		}
 
 		// add friction
-		vx *= gameConfig.ShipFriction
-		vy *= gameConfig.ShipFriction
+		ship.Velocity.X *= gameConfig.ShipFriction
+		ship.Velocity.Y *= gameConfig.ShipFriction
 
 		// preview step multiplier to make dots more spaced
 		previewStep := gameConfig.DragPreviewStep
@@ -82,8 +82,8 @@ func DrawDragIndicator(
 		// slow velocity = tightly packed dots
 		// fast velocity = spaced dots
 		// dots are still fairly dense because you're only advancing by 1 frame of movement per loop
-		px += vx * previewStep
-		py += vy * previewStep
+		px += ship.Velocity.X * previewStep
+		py += ship.Velocity.Y * previewStep
 
 		// t = 0 means the first dot, whilst t = 1 is the last dot
 		// thickness grows toward drag end

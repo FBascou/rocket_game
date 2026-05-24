@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/FBascou/rocket_game/entities"
+	"github.com/FBascou/rocket_game/objects"
 	"github.com/FBascou/rocket_game/render"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -17,7 +17,7 @@ type Positionable interface {
 }
 
 // Returns the destination planet (last in the slice)
-func (game *Game) getDestinationPlanet() *entities.Body {
+func (game *Game) getDestinationPlanet() *objects.Body {
 	// TODO: add if statment if body is planet and isDestination
 	return &game.Bodies[len(game.Bodies)-1]
 }
@@ -41,7 +41,7 @@ func loadImage(path string) *ebiten.Image {
 }
 
 // Get the count of all minerals from all the bodies in a level
-func getTotalMineralsInLevel(bodies []entities.Body) int {
+func getTotalMineralsInLevel(bodies []objects.Body) int {
 	minerals := 0
 	for index := 0; index < len(bodies); index++ {
 		minerals += len(bodies[index].Minerals)
@@ -51,13 +51,13 @@ func getTotalMineralsInLevel(bodies []entities.Body) int {
 
 // Deep cloning bodies and minerals for level restart
 // Should be used for replaying whole level and restarting entire game
-func deepCloneBodies(bodies []entities.Body) []entities.Body {
-	cloned := make([]entities.Body, len(bodies))
+func deepCloneBodies(bodies []objects.Body) []objects.Body {
+	cloned := make([]objects.Body, len(bodies))
 
 	for index, body := range bodies {
 		cloned[index] = body
 
-		clonedMinerals := make([]entities.Mineral, len(body.Minerals))
+		clonedMinerals := make([]objects.Mineral, len(body.Minerals))
 		copy(clonedMinerals, body.Minerals)
 
 		cloned[index].Minerals = clonedMinerals
@@ -78,12 +78,12 @@ func isPointInsideRect(
 
 func (g *Game) GetDragIndicatorConfig() render.DragIndicatorConfig {
 	return render.DragIndicatorConfig{
-		LaunchPower:                g.GameConfig.LaunchPower,
-		MaxLaunchSpeed:             g.GameConfig.MaxLaunchSpeed,
-		DragLineSteps:              g.GameConfig.DragLineSteps,
-		DragPreviewStep:            g.GameConfig.DragPreviewStep,
-		GravityFalloff:             g.GameConfig.GravityFalloff,
-		DragPreviewGravityStrength: g.GameConfig.DragPreviewGravityStrength,
-		ShipFriction:               g.GameConfig.ShipFriction,
+		LaunchPower:       g.GameConfig.LaunchPower,
+		MaxLaunchSpeed:    g.GameConfig.MaxLaunchSpeed,
+		DragLineSteps:     g.GameConfig.DragLineSteps,
+		DragPreviewStep:   g.GameConfig.DragPreviewStep,
+		GravityFalloff:    g.GameConfig.GravityFalloff,
+		GravityMultiplier: g.GameConfig.GravityMultiplier,
+		ShipFriction:      g.GameConfig.ShipFriction,
 	}
 }

@@ -20,7 +20,7 @@ func (game *Game) getDebugFloatVariables() []DebugVariable {
 		{"MineralDamping", 0.01, &game.GameConfig.MineralDamping},
 		{"GravityFalloff", 5, &game.GameConfig.GravityFalloff},
 		{"DragPreviewStep", 0.1, &game.GameConfig.DragPreviewStep},
-		{"DragPreviewGravityStrength", 0.5, &game.GameConfig.DragPreviewGravityStrength},
+		{"GravityMultiplier", 0.5, &game.GameConfig.GravityMultiplier},
 	}
 }
 
@@ -145,7 +145,7 @@ func (game *Game) printCurrentConfig() {
 	fmt.Println("GameConfig{")
 	fmt.Printf("    DragLineSteps: %d,\n", game.GameConfig.DragLineSteps)
 	fmt.Printf("    DragPreviewStep: %.2f,\n", game.GameConfig.DragPreviewStep)
-	fmt.Printf("    DragPreviewGravityStrength: %.2f,\n", game.GameConfig.DragPreviewGravityStrength)
+	fmt.Printf("    GravityMultiplier: %.2f,\n", game.GameConfig.GravityMultiplier)
 	fmt.Printf("    LaunchPower: %.2f,\n", game.GameConfig.LaunchPower)
 	fmt.Printf("    MaxLaunchSpeed: %.2f,\n", game.GameConfig.MaxLaunchSpeed)
 	fmt.Printf("    ShipFriction: %.2f,\n", game.GameConfig.ShipFriction)

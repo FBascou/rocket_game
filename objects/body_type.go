@@ -1,4 +1,4 @@
-package entities
+package objects
 
 type BodyType string
 

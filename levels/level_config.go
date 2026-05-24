@@ -1,6 +1,6 @@
 package levels
 
-import "github.com/FBascou/rocket_game/entities"
+import "github.com/FBascou/rocket_game/objects"
 
 type MineralConfig struct {
 	X float64
@@ -9,7 +9,7 @@ type MineralConfig struct {
 
 type BodyConfig struct {
 	ID              int
-	BodyType        entities.BodyType
+	BodyType        objects.BodyType
 	X               float64
 	Y               float64
 	Size            float64
@@ -29,6 +29,7 @@ type BodyConfig struct {
 type ShipConfig struct {
 	X            float64
 	Y            float64
+	Size         float64
 	MagnetRadius float64
 }
 

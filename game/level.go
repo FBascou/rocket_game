@@ -1,8 +1,9 @@
 package game
 
 import (
-	"github.com/FBascou/rocket_game/entities"
 	"github.com/FBascou/rocket_game/levels"
+	"github.com/FBascou/rocket_game/math2d"
+	"github.com/FBascou/rocket_game/objects"
 	"github.com/FBascou/rocket_game/render"
 	"github.com/FBascou/rocket_game/shared"
 )
@@ -17,14 +18,16 @@ func (game *Game) LoadLevel(index int) {
 	game.LevelNumber = index
 	game.Lives = level.Lives
 
-	game.Bodies = []entities.Body{}
+	game.Bodies = []objects.Body{}
 	usedSprites := map[string]bool{}
 
 	for _, b := range level.Bodies {
 
-		body := entities.Body{
-			X:               b.X,
-			Y:               b.Y,
+		body := objects.Body{
+			Position: math2d.Vector2{
+				X: b.X,
+				Y: b.Y,
+			},
 			BodyType:        b.BodyType,
 			Size:            b.Size,
 			GravityRadius:   b.GravityRadius,
@@ -43,9 +46,11 @@ func (game *Game) LoadLevel(index int) {
 			for _, mineral := range b.Minerals {
 				body.Minerals = append(
 					body.Minerals,
-					entities.Mineral{
-						X: mineral.X,
-						Y: mineral.Y,
+					objects.Mineral{
+						Position: math2d.Vector2{
+							X: mineral.X,
+							Y: mineral.Y,
+						},
 					},
 				)
 			}
@@ -60,9 +65,9 @@ func (game *Game) LoadLevel(index int) {
 		game.Bodies = append(game.Bodies, body)
 	}
 
-	game.Ship = entities.Ship{
-		X:               level.Ship.X,
-		Y:               level.Ship.Y,
+	game.Ship = objects.Ship{
+		Position:        math2d.Vector2{X: level.Ship.X, Y: level.Ship.Y},
+		Size:            16,
 		MagnetRadius:    level.Ship.MagnetRadius,
 		CollisionRadius: 6,
 		SpriteKey:       "ship",

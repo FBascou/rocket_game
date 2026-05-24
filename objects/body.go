@@ -1,11 +1,12 @@
-package entities
+package objects
 
 import (
+	"github.com/FBascou/rocket_game/math2d"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Body struct {
-	X, Y float64
+	Position math2d.Vector2
 	// Physical size
 	Size float64
 	// Gravity field size
@@ -22,10 +23,10 @@ type Body struct {
 
 // Getter function
 func (body Body) GetX() float64 {
-	return body.X
+	return body.Position.X
 }
 
 // Getter function
 func (body Body) GetY() float64 {
-	return body.Y
+	return body.Position.Y
 }
